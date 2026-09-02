@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 460 128" width="920" height="256">
+  <defs>
+    <linearGradient id="top" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#86EFAC"/>
+      <stop offset="1" stop-color="#4ADE80"/>
+    </linearGradient>
+    <linearGradient id="bot" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#22C55E"/>
+      <stop offset="1" stop-color="#15803D"/>
+    </linearGradient>
+  </defs>
+  <g transform="translate(0 -2)">
+    <path d="M11 64 C 11 22, 50 10, 64 10 C 78 10, 117 22, 117 64 L 64 64 Z" fill="url(#top)"/>
+    <path d="M11 64 C 11 106, 50 118, 64 118 C 78 118, 117 106, 117 64 L 64 64 Z" fill="url(#bot)"/>
+    <path d="M 22 47 C 42 30, 86 30, 106 47" stroke="#FFFFFF" stroke-width="3" fill="none" opacity="0.65" stroke-linecap="round"/>
+    <circle cx="64" cy="64" r="32" fill="#67E8F9" opacity="0.22"/>
+    <circle cx="64" cy="64" r="20" fill="#06B6D4"/>
+    <circle cx="64" cy="64" r="11" fill="#0E7490"/>
+    <circle cx="64" cy="64" r="4.5" fill="#FFFFFF"/>
+  </g>
+  <text x="148" y="74" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="54" font-weight="700" fill="#166534">禾目</text>
+  <text x="150" y="102" font-family="Arial,'PingFang SC',sans-serif" font-size="21" font-weight="600" fill="#0E7490" letter-spacing="1">AgriGuard · 慧眼识农</text>
+</svg>

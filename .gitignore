@@ -1,0 +1,49 @@
+# 环境变量（含 LLM API Key，严禁提交）
+.env
+.env.*
+!.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.ipynb_checkpoints/
+
+# 依赖与运行时
+.Lock
+*.log
+
+# 数据（PlantVillage 数据集，体积大且非本项目代码）
+data/
+uploads/
+runs/
+weights/
+
+# 媒体产物（视频/生成图/截图/帧，体积大）
+media/
+
+# 无关/临时权重目录（运行时产物，非本项目模型）
+weights/
+
+# 临时/构建产物
+.chrome_tmp/
+.edge_tmp/
+.edge_tmp_b/
+_lo_profile/
+_supporting_stage/
+
+# IDE / 系统
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+
+# 参赛材料与截图（含文案，避免公开）
+参赛材料/
+.qa_p*.png
+*.local
+
+# 运行时状态（进度面板自动更新）
+status.json

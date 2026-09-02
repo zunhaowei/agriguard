@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>禾目 · 作物健康 AI 医生</title>
+  <link rel="stylesheet" href="/static/styles.css" />
+</head>
+<body>
+  <header class="hero">
+    <div class="badge">AI 辅助制作</div>
+    <h1>禾目 <span>AgriGuard</span></h1>
+    <p class="subtitle">拍一张病叶照片，秒出诊断与防治处方</p>
+  </header>
+
+  <main>
+    <section class="upload-card">
+      <div id="dropzone" class="dropzone">
+        <input type="file" id="file" accept="image/*" hidden />
+        <div class="icon">+</div>
+        <p>点击或拖拽上传病叶照片</p>
+        <p class="hint">支持 jpg / png，请拍摄单片叶片、平铺在纯色背景（如白纸/灰布）上</p>
+        <p class="hint">避免杂乱背景、阴影和叶片重叠，以提升识别准确率</p>
+      </div>
+      <div class="demo-bar">
+        <span>没有照片？</span>
+        <button id="demo-btn" type="button">上传示例病叶图</button>
+      </div>
+      <details class="supported-crops">
+        <summary>当前可识别作物（点击查看）</summary>
+        <p>番茄、葡萄、玉米、马铃薯、苹果、桃、草莓、辣椒、樱桃、大豆、蓝莓、南瓜、树莓、柑橘</p>
+      </details>
+      <img id="preview" class="preview" hidden alt="预览" />
+      <div id="status" class="status"></div>
+    </section>
+
+    <section id="result" class="result" hidden>
+      <h2>诊断结果</h2>
+      <div id="detections" class="detections"></div>
+      <div id="heatmap" class="heatmap" hidden>
+        <span class="label">病灶定位</span>
+        <img id="heatmap-img" alt="Grad-CAM 病灶热力图" />
+      </div>
+      <div id="prescription" class="prescription"></div>
+    </section>
+  </main>
+
+  <footer>
+    <p>智慧农业 · 减肥减药 · 数字乡村</p>
+  </footer>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>
