@@ -45,12 +45,21 @@ REM (b) py 启动器 3.13
 if not defined PYCMD py -3.13 -c "import sys" >nul 2>&1 && set "PYCMD=py -3.13"
 if not defined PYDESC if defined PYCMD set "PYDESC=3.13（本项目已验证的主版本）"
 
-REM (c) 已知的独立分发解释器路径（本项目验证环境实际使用的就是这一个）
+REM (c) 已知的独立分发解释器路径。
+REM     首选：官方安装的 Python（推荐，2026-09-20 起本项目 .venv 就构建在它之上）
+REM     备用：WorkBuddy 自带的独立解释器（不在 py 启动器注册表里，故需显式探测）
+if not defined PYCMD (
+    set "OFFICIAL=%LOCALAPPDATA%\Python\pythoncore-3.13-64\python.exe"
+    if exist "!OFFICIAL!" (
+        "!OFFICIAL!" -c "import sys" >nul 2>&1 && set "PYCMD=!OFFICIAL!"
+        if defined PYCMD set "PYDESC=3.13（官方安装，本项目 .venv 的构建基础）"
+    )
+)
 if not defined PYCMD (
     set "BUNDLED=%USERPROFILE%\.workbuddy\binaries\python\versions\3.13.12\python.exe"
     if exist "!BUNDLED!" (
         "!BUNDLED!" -c "import sys" >nul 2>&1 && set "PYCMD=!BUNDLED!"
-        if defined PYCMD set "PYDESC=3.13（独立分发解释器，已实测为本项目验证版本）"
+        if defined PYCMD set "PYDESC=3.13（独立分发解释器，备用路径）"
     )
 )
 

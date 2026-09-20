@@ -29,6 +29,7 @@
   var dropzone = document.getElementById("dropzone");
   var fileInput = document.getElementById("file");
   var demoBtn = document.getElementById("demo-btn");
+  var oodBtn = document.getElementById("ood-btn");
   var demoThumb = document.getElementById("demo-thumb");
   var dropzoneHint = document.getElementById("dropzone-hint");
   var previewWrap = document.getElementById("preview-wrap");
@@ -579,25 +580,48 @@
     if (fileInput.files && fileInput.files[0]) handleFile(fileInput.files[0]);
   });
 
-  demoBtn.addEventListener("click", function () {
-    demoBtn.disabled = true;
-    setStatusBusy("正在加载示例病叶图…");
-    fetch("/static/_demo_leaf_compliant.jpg")
+  // 示例图加载与提交（示例病叶图 / 非支持作物叶片图共用同一逻辑）
+  function runSample(btn, url, filename, busyText) {
+    btn.disabled = true;
+    setStatusBusy(busyText);
+    fetch(url)
       .then(function (r) {
         if (!r.ok) throw new Error("示例图不可用");
         return r.blob();
       })
       .then(function (blob) {
-        var f = new File([blob], "_demo_leaf_compliant.jpg", { type: "image/jpeg" });
-        handleFile(f);
+        handleFile(new File([blob], filename, { type: "image/jpeg" }));
       })
       .catch(function (err) {
         setStatusError("示例图加载失败：" + ((err && err.message) || "未知错误"));
       })
       .finally(function () {
-        demoBtn.disabled = false;
+        btn.disabled = false;
       });
+  }
+
+  demoBtn.addEventListener("click", function () {
+    runSample(
+      demoBtn,
+      "/static/_demo_leaf_compliant.jpg",
+      "_demo_leaf_compliant.jpg",
+      "正在加载示例病叶图…"
+    );
   });
+
+  // 拒识演示：这张是【非支持作物】（银杏）的真实照片，能进入 OOD 拒识区，
+  // 用来展示「系统敢说自己不知道」这一核心能力。
+  // 素材来源与授权见 docs/演示素材.md。
+  if (oodBtn) {
+    oodBtn.addEventListener("click", function () {
+      runSample(
+        oodBtn,
+        "/static/_demo_leaf_ood.jpg",
+        "_demo_leaf_ood.jpg",
+        "正在加载非支持作物叶片图…"
+      );
+    });
+  }
 
   // 示例缩略图缺失时优雅降级，不出现破图
   demoThumb.addEventListener("error", function () {

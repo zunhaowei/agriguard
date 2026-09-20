@@ -66,12 +66,19 @@ _*.py
 # --- 本机备份（清理前快照，不进仓库）---
 .workbuddy/backup/
 
-# --- 团队审查的临时探测产物 ---
-# 结论已沉淀到各 .md 报告里；这些是过程中的中间输出，不进版本控制。
-.workbuddy/review/_*
-.workbuddy/review/devops_*
-!.workbuddy/review/devops.md
+# --- 团队审查与验证的工作区 ---
+#
+# 保留 review/ 与 memory/ 入库：它们是「开发过程可追溯」的举证材料
+# （iCAN 原创性 20 分要求佐证材料真实有效），且已做过敏感信息脱敏
+# （见 scripts/scan_sensitive.py，可随时复扫）。
+# 仅排除过程中的临时产物：清理前备份、验证中间输出、素材暂存目录。
+.workbuddy/backup/
 .workbuddy/verify_work/
+.workbuddy/ood_demo/
+.workbuddy/review/_*
+.workbuddy/review/devops_*_out.txt
+.workbuddy/review/devops_*.py
+.workbuddy/review/devops_*.json
 
 # --- IDE / 系统 ---
 .idea/

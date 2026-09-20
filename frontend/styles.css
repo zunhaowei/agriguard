@@ -248,6 +248,13 @@ body {
 }
 .demo-text { min-width: 0; }
 .demo-title { margin: 0 0 var(--space-2); font-size: var(--fs-sm); color: var(--text-secondary); }
+.demo-alt {
+  margin: var(--space-3) 0 0;
+  font-size: var(--fs-xs);
+  color: var(--text-tertiary);
+  line-height: var(--lh-normal);
+}
+.demo-alt b { font-weight: 500; color: var(--text-secondary); }
 
 .btn {
   display: inline-flex;

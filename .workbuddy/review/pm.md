@@ -310,17 +310,17 @@
 
 | # | 文件 | 行号 | 泄露内容 | 说明 |
 |---|---|---|---|---|
-| 1 | `开发交接文档.md` | 8 | `C:\Users\19057\Desktop\hemu-agriguard-master` | Windows 用户名 `19057`（疑似个人账号）+ 桌面路径 |
-| 2 | `开发交接文档.md` | 115 | `C:\Users\weizunhao\AppData\Local\Programs\Python\Python312` | **`weizunhao` = 真实姓名拼音**，可反查身份 |
-| 3 | `开发交接文档.md` | 369 | `C:\Users\19057\Desktop\hemu-agriguard-master` | 同上路径重复 |
-| 4 | `.workbuddy/memory/2026-09-16.md` | 6 | `C:\Users\19057\Desktop\hemu-agriguard-master` | 迁移记录路径 |
-| 5 | `.workbuddy/memory/2026-09-16.md` | 21 | `C:\Users\19057\Desktop\hemu-agriguard-master` | 遗留目录路径 |
-| 6 | `.workbuddy/memory/2026-09-16.md` | 24 | `C:\Users\19057\.workbuddy\binaries\python\versions\3.13.12` | 用户名路径 |
-| 7 | `项目审查报告.html` | 110 | `工作目录：C:\Users\19057\Desktop\hemu-agriguard-master` | **该 HTML 为旧版审查报告，最可能被误当"开发过程材料"提交** |
-| 8 | `.workbuddy/review/_out_versions_run.txt` / `_out_versions_run_utf8.txt` | 1 | `C:\Users\19057\...` | 本次/它队审查产生的临时文件，**应清理，勿随材料提交** |
+| 1 | `开发交接文档.md` | 8 | `<用户目录>\Desktop\hemu-agriguard-master` | Windows 用户名 `19057`（疑似个人账号）+ 桌面路径 |
+| 2 | `开发交接文档.md` | 115 | `<用户目录>\AppData\Local\Programs\Python\Python312` | **`weizunhao` = 真实姓名拼音**，可反查身份 |
+| 3 | `开发交接文档.md` | 369 | `<用户目录>\Desktop\hemu-agriguard-master` | 同上路径重复 |
+| 4 | `.workbuddy/memory/2026-09-16.md` | 6 | `<用户目录>\Desktop\hemu-agriguard-master` | 迁移记录路径 |
+| 5 | `.workbuddy/memory/2026-09-16.md` | 21 | `<用户目录>\Desktop\hemu-agriguard-master` | 遗留目录路径 |
+| 6 | `.workbuddy/memory/2026-09-16.md` | 24 | `<用户目录>\<运行时目录>\binaries\python\versions\3.13.12` | 用户名路径 |
+| 7 | `项目审查报告.html` | 110 | `工作目录：<用户目录>\Desktop\hemu-agriguard-master` | **该 HTML 为旧版审查报告，最可能被误当"开发过程材料"提交** |
+| 8 | `.workbuddy/review/_out_versions_run.txt` / `_out_versions_run_utf8.txt` | 1 | `<用户目录>\...` | 本次/它队审查产生的临时文件，**应清理，勿随材料提交** |
 
 **修改建议**：
-- 所有路径统一脱敏为**相对路径**或占位符，如 `%PROJECT_ROOT%` / `<工作目录>`；把 `C:\Users\weizunhao\...\Python312` 改为「本机 Python 3.12 安装路径」。
+- 所有路径统一脱敏为**相对路径**或占位符，如 `%PROJECT_ROOT%` / `<工作目录>`；把 `<用户目录>\...\Python312` 改为「本机 Python 3.12 安装路径」。
 - **删除而非仅替换**：`项目审查报告.html`（旧版，且非参赛必需）、`.workbuddy/review/` 下的 `_out_*` / `_tmp_*` / `_measure_*` 临时产物。
 - **导出/提交前二次全量扫描**：任何对外材料（PPT/视频/海报/文档）在导出后，**重新用关键词扫描一遍导出物**（PPT 备注页、视频字幕、海报小字都是高危区）。
 

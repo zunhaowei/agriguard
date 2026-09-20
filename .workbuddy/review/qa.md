@@ -3,7 +3,7 @@
 - 核验人：严过关（测试工程师）
 - 核验日期：2026-09-20
 - 项目根：`D:\shuangti11\ICAN\ican\CNDS`
-- 环境实况：base Python 3.13.12 + venv site-packages（`.venv\Scripts\python.exe` 的 `pyvenv.cfg` **home 指向已不存在的 `C:\Users\19057\...`，venv 的 python.exe 直接不可用**；本次改用 base 解释器 + `PYTHONPATH=<venv site-packages>` 运行，torch 2.13.0+cu126 / CUDA 可用）。bash 已损坏，全部经 PowerShell 重定向落盘后用 Read 读取。
+- 环境实况：base Python 3.13.12 + venv site-packages（`.venv\Scripts\python.exe` 的 `pyvenv.cfg` **home 指向已不存在的 `<用户目录>\...`，venv 的 python.exe 直接不可用**；本次改用 base 解释器 + `PYTHONPATH=<venv site-packages>` 运行，torch 2.13.0+cu126 / CUDA 可用）。bash 已损坏，全部经 PowerShell 重定向落盘后用 Read 读取。
 - ⚠️ **重要前提**：核验过程中后端正被队友**并发重构**（`backend/app/` 8 个文件时间戳集中在 2026-09-20 14:46–14:49，新增 `constants.py`/`imaging.py`/`model_arch.py`）。本报告的"当前状态"结论均以 **14:49:53 之后的代码 + 重启后的服务** 为准，并已重新拉取文件快照。
 
 ---
@@ -218,7 +218,7 @@
 - ✅ 重构后代码里已埋**原创指纹**（`ORIGIN_SIGNATURE=HM-AG-2026-0920`，贯穿响应头/响应体/CSS/DOM），对"防抄袭取证"是加分
 
 **仍缺、且会被追问的（建议赛前补齐）**：
-1. **训练产物溯源不一致**：`runs/agriguard_v2/args.yaml` 的 `model/data/project/save_dir` 全部指向 `C:\Users\19057\Desktop\hemu-agriguard-master\...`，而 `memory/2026-09-15.md` 声称在 **RTX 4060 / D 盘** 重训。**两者对不上**。评委若核对 `args.yaml`，会问"这模型到底在哪台机器、哪个目录训的？" → 建议：补充一份"环境迁移说明"（C 盘原目录 → D 盘 `D:\CNDS` → 现 `D:\shuangti11\ICAN\ican\CNDS`），或重跑一次短训生成同源 args.yaml，把路径坐实。
+1. **训练产物溯源不一致**：`runs/agriguard_v2/args.yaml` 的 `model/data/project/save_dir` 全部指向 `<用户目录>\Desktop\hemu-agriguard-master\...`，而 `memory/2026-09-15.md` 声称在 **RTX 4060 / D 盘** 重训。**两者对不上**。评委若核对 `args.yaml`，会问"这模型到底在哪台机器、哪个目录训的？" → 建议：补充一份"环境迁移说明"（C 盘原目录 → D 盘 `D:\CNDS` → 现 `D:\shuangti11\ICAN\ican\CNDS`），或重跑一次短训生成同源 args.yaml，把路径坐实。
 2. **文档数据漂移**：交接文档的 train/val 数、`runs/agriguard`(v1) vs 实际 `agriguard_v2`、top1 99.8% vs 99.74% 均需更正为实测值。
 3. **无版本控制（无 .git）**：研发过程"可追溯"最硬的证据是提交历史；当前**完全没有**。建议赛前 `git init` 并至少导入当前快照 + 关键节点，形成时间线。
 4. **热力图技术表述需校正**：重构后代码自测承认"当前样图着色像素约 **96.6% 来自色温异常通道、仅约 4.0% 来自 Grad-CAM++ 本体**"（`gradcam.py` 内 `gradcam_contrib`/`color_anomaly_contrib`）。对外若仍主宣传"Grad-CAM++ 定位病灶"会与实际输出不符 → 应按"Grad-CAM++ + 色温异常双通道"如实表述。
@@ -343,7 +343,7 @@ verdict: pass
 ### advisory（复验后仍存）
 
 - ~~**[契约]** 前端 `app.js:103/146` 仍硬编码 `0.25 / 0.32 / 作物清单`~~ → **已关闭**：复验确认前端已改为消费 `/api/v1/meta` 与响应体阈值（`app.js:104-131,408-485`）。
-- **[证据一致性]** `runs/agriguard_v2/args.yaml` 溯源指向 `C:\Users\19057\Desktop\hemu-agriguard-master`，与 `memory/2026-09-15.md` 的"RTX 4060 / D 盘重训"不一致；建议补环境迁移说明或重跑同源训练。
+- **[证据一致性]** `runs/agriguard_v2/args.yaml` 溯源指向 `<用户目录>\Desktop\hemu-agriguard-master`，与 `memory/2026-09-15.md` 的"RTX 4060 / D 盘重训"不一致；建议补环境迁移说明或重跑同源训练。
 - **[证据一致性]** 交接文档 train/val 数（43515/10790）、总图数 54305、`runs/agriguard`(v1)、top1 99.8% 均与实测（48282/12061、60343、`agriguard_v2`、99.74%）不符，需更正。
 - **[可复现性]** `requirements.txt` 未锁版本、未含 torch/torchvision；`setup.bat` 的 CUDA 版本与实物漂移；建议锁定 `ultralytics==8.4.137`、`torch==2.13.0+cu126`。
 - **[版本控制]** 无 `.git`，研发过程"可追溯"缺最硬证据；建议 `git init` + 关键节点提交。
@@ -365,7 +365,7 @@ verdict: pass
 - `{artifact: _qa_server2.txt, line: 9-13, 说明: 启动预热 5.84s、best.pt 生产权重、target=[9] C2PSA、head=[10] Classify}`
 - `{artifact: _qa_scripts2.txt, line: 51-63, 说明: smoke_test.py 崩于 d.name}`
 - `{artifact: frontend/app.js, line: 103,146, 说明: 前端硬编码 0.25/0.32，未消费 /api/v1/meta}`
-- `{artifact: runs/agriguard_v2/args.yaml, line: 3-4,15-16,116, 说明: 溯源路径 C:\Users\19057\Desktop\hemu-agriguard-master，与日志不符}`
+- `{artifact: runs/agriguard_v2/args.yaml, line: 3-4,15-16,116, 说明: 溯源路径 <用户目录>\Desktop\hemu-agriguard-master，与日志不符}`
 
 **复验证据（Round-2）**：
 - `{artifact: _qa_reverify2.txt, line: 3-7, 说明: uploads 改名后 import app.main → IMPORT_OK/EXIT=0，且 import 期重建 uploads}`
@@ -384,4 +384,4 @@ verdict: pass
 `_tmp_fs_audit.py` `_tmp_model_check.py` `_tmp_visual_scan.py` `_tmp_http_check.py` `_tmp_regression_baseline.py` 及对应 `_tmp_*_out.txt` / `_tmp_model_check.json`（其中 `_tmp_regression_baseline.py` 建议**保留并迁为 `tests/test_baseline.py`**）。
 项目根下 QA 过程输出（**可删除**）：`_qa_*.txt` `_qa_tmp_diag*.py`、目录 `_qa_pycache\`。
 服务状态：本次核验期间启动过 uvicorn（127.0.0.1:8000）用于真实回归，核验结束时已停止（恢复到会话开始前的状态）。
-另注：`.venv\Scripts\python.exe` 因 `pyvenv.cfg` 的 home 指向已失效的 `C:\Users\19057\...` 而**不可直接使用**，建议修复 venv 或重建（属环境问题，非项目代码问题）。
+另注：`.venv\Scripts\python.exe` 因 `pyvenv.cfg` 的 home 指向已失效的 `<用户目录>\...` 而**不可直接使用**，建议修复 venv 或重建（属环境问题，非项目代码问题）。

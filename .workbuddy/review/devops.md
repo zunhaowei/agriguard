@@ -59,7 +59,7 @@
 # 0. 前置：确认 Python 3.13 存在（实测 .venv 基础解释器为 3.13.14）
 py -0p                      # 期望列出 3.13；本机实测输出 3.14/3.12/3.11，未见 3.13 注册项
                             # 说明：本机 3.13 由 workbuddy 托管于
-                            #   C:\Users\weizunhao\.workbuddy\binaries\python\versions\3.13.12\python.exe（实测 --version = 3.13.14）
+                            #   <用户目录>\<运行时目录>\binaries\python\versions\3.13.12\python.exe（实测 --version = 3.13.14）
 
 # 1. 直接用现有 .venv（本机已就绪，勿重装）
 cd D:\shuangti11\ICAN\ican\CNDS
@@ -85,7 +85,7 @@ curl.exe http://127.0.0.1:8000/health
 | F4 | 交接文档 §11 第 6 步 | `serve_panel.bat` 已删除（移入备份），照抄会「文件不存在」 | 根目录实测无该文件 |
 | F5 | `requirements.txt`（原版） | 无 torch/torchvision，单独 `pip install -r` 得到**没有 torch 的坏环境**；新版已加醒目警告并改由 `setup.bat` 负责安装，**已修复** | 新版 requirements.txt line 3–5 |
 | F6 | `requirements.txt`（原版） | `ultralytics>=8.2` 会装到 **8.4.153**，与 `detector.py` 的 forward hook 冲突（`cannot pickle '_thread.lock'`），推理直接崩。新版已锁 `==8.4.137`，**已修复** | 新版 line 7–12；`.workbuddy/memory/2026-09-16.md` line 14 |
-| F7 | 托管 Python 路径依赖 | `.venv\pyvenv.cfg` 的 `home` 指向 `C:\Users\19057\...\python\versions\3.13.12`（**该路径实测不存在**，当前用户为 `weizunhao`）。.venv 之所以仍可运行，是解释器解析走了另一条路径；换机/换用户后**必须先重建 venv**，不能直接拷贝 | 实测 `pyvenv.cfg`: `home = C:\Users\19057\...`，`Test-Path` = False |
+| F7 | 托管 Python 路径依赖 | `.venv\pyvenv.cfg` 的 `home` 指向 `<用户目录>\...\python\versions\3.13.12`（**该路径实测不存在**，当前用户为 `weizunhao`）。.venv 之所以仍可运行，是解释器解析走了另一条路径；换机/换用户后**必须先重建 venv**，不能直接拷贝 | 实测 `pyvenv.cfg`: `home = <用户目录>\...`，`Test-Path` = False |
 
 **依赖清单（按"必须锁死 / 可放宽 / CUDA 相关 / 仅训练用 / 已装但未使用"分类，均以实测版本为锚点）**
 
@@ -758,7 +758,7 @@ evidence:
 |---|---|---|
 | (a) | `%AGRI_PYTHON%` | 环境变量显式指定（校验存在 + `import sys` 成功），换机器时最可靠 |
 | (b) | `py -3.13` | 标注"本项目已验证的主版本" |
-| (c) | `%USERPROFILE%\.workbuddy\binaries\python\versions\3.13.12\python.exe` | 已知独立分发解释器（验证环境实际来源） |
+| (c) | `%USERPROFILE%\<运行时目录>\binaries\python\versions\3.13.12\python.exe` | 已知独立分发解释器（验证环境实际来源） |
 | (d) | `py -3.12` | 标注"**未验证路径**，建议改用 3.13" |
 | (e) | `python` | 标注"版本未确认" |
 
@@ -766,8 +766,8 @@ evidence:
 
 ```
 py -0p
- -V:3.14 *        C:\Users\weizunhao\AppData\Local\Programs\Python\Python314\python.exe
- -V:3.12          C:\Users\weizunhao\AppData\Local\Programs\Python\Python312\python.exe
+ -V:3.14 *        <用户目录>\AppData\Local\Programs\Python\Python314\python.exe
+ -V:3.12          <用户目录>\AppData\Local\Programs\Python\Python312\python.exe
  -V:3.11          D:\python.exe
 
 py -3.13 -c "import sys"   →  rc = -1610612730（No runtime installed that matches 3.13）
