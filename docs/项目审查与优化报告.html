@@ -589,6 +589,39 @@ main.py  _run_predict()
   <b>若将来升级 ultralytics，必须重新核实生效的开关名。</b></p>
 </blockquote>
 
+<h3>6.5 环境可复现性的真实边界（写材料时不要说过头）</h3>
+<blockquote class="warn">
+  <p><b>不宜主张「重装一遍 setup.bat 就能 1:1 复现验证环境」——目前不成立。</b>
+  实测（两位同事独立复现）：本机 Windows 的 <code>py</code> 启动器里<b>并没有注册 Python 3.13</b>
+  （<code>py -0p</code> 只列出 3.14 默认 / 3.12 / 3.11，<code>py -3.13</code> 直接报
+  <code>No runtime installed</code>）。而本项目已验证的那套 <code>.venv</code>（Python 3.13.14）
+  所依赖的解释器是<b>独立分发的、不在启动器注册表里</b>，
+  其 <code>pyvenv.cfg</code> 的 <code>home</code> 指向
+  <code>&lt;用户目录&gt;\.workbuddy\binaries\python\versions\3.13.12\python.exe</code>
+  （目录名叫 3.13.12，实际版本为 <b>3.13.14</b>，勿以目录名为准）。</p>
+  <p><b>因此：</b>只把 <code>py -3.13</code> 放进探测链是<b>不够的</b>——它在这台机器上探测不到，
+  会静默落到 <code>py -3.12</code> 这条<b>未验证路径</b>上。必须**额外探测独立解释器的已知路径**
+  才能命中 3.13。</p>
+  <p><b>已做的补全与实测结果：</b><code>setup.bat</code> 的探测顺序改为
+  <code>AGRI_PYTHON</code> 环境变量 → <code>py -3.13</code> → <b>已知独立解释器路径</b> →
+  <code>py -3.12</code> → <code>python</code>，并逐条标注所用解释器是否为已验证版本，
+  自检时打印 <code>sys.executable</code>。</p>
+  <p><b>实测（补全后复核）：本机 fresh 跑 <code>setup.bat</code> 会命中独立解释器路径 →
+  Python 3.13.14，即已验证路径，复现缺口在本机已补上。</b>
+  仅当一台干净机器同时满足「未设 <code>AGRI_PYTHON</code>、launcher 无 3.13、
+  且不存在该独立解释器路径」三个条件时才会落到 3.12（未验证）；
+  这种情况下显式指定即可复现验证环境：</p>
+  <pre><code>set AGRI_PYTHON=C:\path\to\python313\python.exe
+setup.bat</code></pre>
+  <p><b>建议的对外表述</b>（如实、不含糊）：「<code>.venv</code> 基础解释器为 Python 3.13.14；
+  <code>setup.bat</code> 会优先探测该 3.13 解释器，并在输出中标注所用解释器是否已验证；
+  若目标机器没有 3.13，则退回 3.12（可正常安装与运行，但未做回归验证），
+  此时可用 <code>AGRI_PYTHON</code> 指定。」</p>
+  <p><b>为什么仍不阻塞：</b>cu126 索引同时提供 <code>cp312</code> / <code>cp313</code>
+  的 Windows wheel，3.12 能装能跑；这是<b>验证覆盖</b>缺口，不是「装不上」。
+  完整说明见 <code>docs/数据复现.md</code> 第 1.0 节。</p>
+</blockquote>
+
 <!-- ============================================================ -->
 <h2>七、回归测试的沉默失败（重要）</h2>
 

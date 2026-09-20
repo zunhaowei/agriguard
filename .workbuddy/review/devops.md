@@ -750,14 +750,45 @@ evidence:
 | A-3 `.env.example` 与实现对齐 | **已修复** | `.env.example` 已改写为新语义（显式关闭的取值 + "无有效 key 时不发请求"） |
 | A-4 run.bat 窗口标题 / 模型缺失处置 | **已修复** | `run.bat` 15:26:58 重写（未逐字复核，属建议级别） |
 
-### E3. 残留小项（非阻塞，建议顺手处理）
+### E3. 残留小项（非阻塞）：解释器探测链 —— **本机缺口已闭合，他机由文档兜住**
 
-`setup.bat` line 25–26 探测 Python 时的优先级是 `py -3.12` → `py -3.13` → `python`。本机 `py -3.12` **存在**（`C:\Users\weizunhao\AppData\Local\Programs\Python\Python312`），因此在**这台机器上**跑全新 `setup.bat` 会建出 **3.12** 的 venv，而实测验证环境是 **3.13.14**（`.venv\pyvenv.cfg` 的 `version = 3.13.14`）。
+**第一层（已修复）**：`setup.bat` 原先把 `py -3.12` 排在 `py -3.13` 之前。现已改为**五段探测链**（`setup.bat` line 33–63），每段都有 `PYDESC` 标注：
 
-- **不构成失败**（已实测核实）：`https://mirrors.aliyun.com/pytorch-wheels/cu126/`（共 1298 个 whl）中 cp312 与 cp313 的 Windows wheel 均在：
-  `torch-2.13.0+cu126-cp312-cp312-win_amd64.whl`、`torch-2.13.0+cu126-cp313-cp313-win_amd64.whl`、
-  `torchvision-0.28.0+cu126-cp312-cp312-win_amd64.whl`、`torchvision-0.28.0+cu126-cp313-cp313-win_amd64.whl`。
-- **但"能装"不等于"与验证过的环境一致"**：3.12 venv 从未跑过 `scripts/verify_pipeline.py`。建议把 3.13 提到 3.12 之前，或至少注明"3.13 为实机验证版本，3.12 可用但未验证"。
+| 顺位 | 探测目标 | 说明 |
+|---|---|---|
+| (a) | `%AGRI_PYTHON%` | 环境变量显式指定（校验存在 + `import sys` 成功），换机器时最可靠 |
+| (b) | `py -3.13` | 标注"本项目已验证的主版本" |
+| (c) | `%USERPROFILE%\.workbuddy\binaries\python\versions\3.13.12\python.exe` | 已知独立分发解释器（验证环境实际来源） |
+| (d) | `py -3.12` | 标注"**未验证路径**，建议改用 3.13" |
+| (e) | `python` | 标注"版本未确认" |
+
+**第二层（实测复核 + 更正我前一轮的结论）**：本机 `py` 启动器确实**未注册 3.13**：
+
+```
+py -0p
+ -V:3.14 *        C:\Users\weizunhao\AppData\Local\Programs\Python\Python314\python.exe
+ -V:3.12          C:\Users\weizunhao\AppData\Local\Programs\Python\Python312\python.exe
+ -V:3.11          D:\python.exe
+
+py -3.13 -c "import sys"   →  rc = -1610612730（No runtime installed that matches 3.13）
+py -3.12 --version         →  Python 3.12.10
+py -3.14 --version         →  Python 3.14.7
+（(c) 路径）--version       →  Python 3.13.14      Test-Path = True，rc = 0
+```
+
+**更正**：由于新增了 (c) 这条独立解释器探测，**本机 fresh 跑 `setup.bat` 会命中 (c) → 3.13.14（已验证路径），不再落到 3.12**。实测复核：(c) 的 `Test-Path = True`、`--version` = `Python 3.13.14`、rc = 0；(b) 实测失败。→ **本机的复现缺口已被 (c) 补上**，我前一轮"本机仍落 3.12"的判断据此作废。
+
+**残留限制（固有限制，不是缺陷）**：仅当一台机器**三者同时不成立** —— 未设 `AGRI_PYTHON`、launcher 无 3.13、且不存在该独立解释器 —— 才会落到 (d) 3.12（未验证路径）。此限制**已由 `docs/数据复现.md` 兜住**（实测存在，7,687 bytes）：该文档 §1.0 写明 py/3.13 这个坑、`AGRI_PYTHON` 用法、以及"目录名是 3.13.12 但解释器实际报告 3.13.14，勿以目录名为准"；并给出 3.12 路径的处置（能装能跑，但必须补跑 `scripts/verify_pipeline.py` 再用于演示）。
+
+**对交付口径的影响（相比前一轮已放宽）**：本机"重装即可复现验证环境"**现在成立**（因为 (c) 生效）。正确口径是**有条件表述**：
+- 本机 / 具备该独立解释器的机器：fresh `setup.bat` → 3.13.14 验证环境，可 1:1 复现；
+- 其他机器：用 `set AGRI_PYTHON=<python313 路径>` 指定，或接受 3.12 并补跑回归。
+**不建议**写成无条件的"任何机器重装即可 1:1 复现"。
+
+**为何仍判非阻塞**（结论不变）：`https://mirrors.aliyun.com/pytorch-wheels/cu126/`（共 1298 个 whl）同时提供 cp312 与 cp313 的 Windows wheel，3.12 路径**能装能跑**：
+`torch-2.13.0+cu126-cp312-cp312-win_amd64.whl`、`torch-2.13.0+cu126-cp313-cp313-win_amd64.whl`、
+`torchvision-0.28.0+cu126-cp312-cp312-win_amd64.whl`、`torchvision-0.28.0+cu126-cp313-cp313-win_amd64.whl`。
+故属"验证覆盖"缺口，而非"装不上/跑不起来"。
 
 ### E4. 遗留的未验证项（承 §C）
 
@@ -771,3 +802,4 @@ U1–U4 仍成立。其中 U1（aliyun PyPI 上无本地版本号的 `torch-2.13
 |---|---|---|
 | 2026-09-20 | 首次生成 | 运维审计：依赖可复现性 + 部署/现场演示健壮性 |
 | 2026-09-20 | 追加 §E | 修复落地复核、归属记录、残留小项（Python 3.12/3.13 优先级） |
+| 2026-09-20 | §E3 二次修订 | 复核 setup.bat 五段探测链 (a)–(e)；更正"本机仍落 3.12"的判断——(c) 已闭合本机缺口，他机由 docs/数据复现.md + AGRI_PYTHON 兜住 |

@@ -21,26 +21,58 @@ if "%CHOICE%"=="" set "CHOICE=1"
 REM ---- 1. 定位可用的 Python ----
 echo.
 echo [1/5] 检查 Python ...
-REM 优先 3.13：本项目的 .venv 与全部验证（含回归 5/5 通过）均在 Python 3.13.14 上完成。
+REM 优先 3.13：本项目的 .venv 与全部验证（含回归 5/5）均在 Python 3.13.14 上完成。
 REM 3.12 也能装（cu126 索引同时提供 cp312 / cp313 的 Windows wheel），
-REM 但注意：3.12 这套组合**从未跑过 scripts\verify_pipeline.py**，属未验证路径。
-REM 因此这里刻意把 3.13 排在前面，避免在同时装了 3.12 的机器上悄悄建出未验证环境。
+REM 但 3.12 这套组合**从未跑过 scripts\verify_pipeline.py**，属未验证路径。
+REM
+REM 探测顺序说明（实测教训，别改成只靠 py -3.13）：
+REM   Windows 的 py 启动器**不一定注册了 3.13** —— 本机实测 py -0p 只有 3.14/3.12/3.11，
+REM   而已验证的 3.13.14 解释器是独立分发的、不在启动器注册表里。
+REM   因此只用 `py -3.13` 会探测不到并静默落回 3.12，装出未验证的环境。
+REM   所以这里额外探测已知的独立解释器路径，并支持用环境变量 AGRI_PYTHON 显式指定。
 set "PYCMD="
 set "PYDESC="
-py -3.13 -c "import sys" >nul 2>&1 && set "PYCMD=py -3.13"
-if defined PYCMD set "PYDESC=3.13（本项目已验证版本）"
+
+REM (a) 环境变量显式指定优先（换机器时最可靠的指定方式）
+if defined AGRI_PYTHON (
+    if exist "%AGRI_PYTHON%" (
+        "%AGRI_PYTHON%" -c "import sys" >nul 2>&1 && set "PYCMD=%AGRI_PYTHON%"
+        if defined PYCMD set "PYDESC=由环境变量 AGRI_PYTHON 指定"
+    )
+)
+
+REM (b) py 启动器 3.13
+if not defined PYCMD py -3.13 -c "import sys" >nul 2>&1 && set "PYCMD=py -3.13"
+if not defined PYDESC if defined PYCMD set "PYDESC=3.13（本项目已验证的主版本）"
+
+REM (c) 已知的独立分发解释器路径（本项目验证环境实际使用的就是这一个）
+if not defined PYCMD (
+    set "BUNDLED=%USERPROFILE%\.workbuddy\binaries\python\versions\3.13.12\python.exe"
+    if exist "!BUNDLED!" (
+        "!BUNDLED!" -c "import sys" >nul 2>&1 && set "PYCMD=!BUNDLED!"
+        if defined PYCMD set "PYDESC=3.13（独立分发解释器，已实测为本项目验证版本）"
+    )
+)
+
+REM (d) 3.12：可装可跑，但未经回归验证
 if not defined PYCMD py -3.12 -c "import sys" >nul 2>&1 && set "PYCMD=py -3.12"
-if not defined PYDESC if defined PYCMD set "PYDESC=3.12（未验证路径，建议改用 3.13）"
+if not defined PYDESC if defined PYCMD set "PYDESC=3.12（**未验证路径**，建议改用 3.13；详见 docs\数据复现.md）"
+
+REM (e) 兜底
 if not defined PYCMD python -c "import sys" >nul 2>&1 && set "PYCMD=python"
 if not defined PYDESC if defined PYCMD set "PYDESC=系统默认 python（版本未确认）"
+
 if not defined PYCMD (
     echo        [错误] 未找到可用的 Python 解释器。
     echo        请安装 Python 3.13（推荐，本项目已验证版本）或 3.12，
-    echo        安装时勾选 "Add Python to PATH"。
+    echo        安装时勾选 "Add Python to PATH"；
+    echo        也可用环境变量指定，例如：
+    echo            set AGRI_PYTHON=C:\path\to\python.exe
     pause
     exit /b 1
 )
-echo        使用解释器：%PYCMD%  —— %PYDESC%
+echo        使用解释器：%PYCMD%
+echo        说明：%PYDESC%
 
 REM ---- 2. 创建虚拟环境 ----
 echo.
@@ -128,7 +160,7 @@ echo.
 echo ============================================================
 echo   安装完成，正在自检
 echo ============================================================
-"%PY%" -c "import sys,torch,ultralytics,cv2,fastapi,numpy;print('Python     ',sys.version.split()[0]);print('torch      ',torch.__version__);print('CUDA 可用  ',torch.cuda.is_available());print('ultralytics',ultralytics.__version__);print('opencv     ',cv2.__version__);print('fastapi    ',fastapi.__version__);print('numpy      ',numpy.__version__)"
+"%PY%" -c "import sys,torch,ultralytics,cv2,fastapi,numpy;print('解释器路径 ',sys.executable);print('Python     ',sys.version.split()[0]);print('torch      ',torch.__version__);print('CUDA 可用  ',torch.cuda.is_available());print('ultralytics',ultralytics.__version__);print('opencv     ',cv2.__version__);print('fastapi    ',fastapi.__version__);print('numpy      ',numpy.__version__)"
 if errorlevel 1 (
     echo [警告] 自检未通过，请查看上方报错。
     pause
