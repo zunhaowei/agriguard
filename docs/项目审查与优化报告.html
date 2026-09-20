@@ -613,6 +613,9 @@ main.py  _run_predict()
   这种情况下显式指定即可复现验证环境：</p>
   <pre><code>set AGRI_PYTHON=C:\path\to\python313\python.exe
 setup.bat</code></pre>
+  <p><b>对外应使用有条件表述</b>：具备该 3.13 解释器的机器（含本机）<b>可 1:1 复现验证环境</b>；
+  其他机器须用 <code>AGRI_PYTHON</code> 指定，否则会退回 3.12（未回归）。
+  <b>不要无条件主张「重装即可 1:1 复现」。</b></p>
   <p><b>建议的对外表述</b>（如实、不含糊）：「<code>.venv</code> 基础解释器为 Python 3.13.14；
   <code>setup.bat</code> 会优先探测该 3.13 解释器，并在输出中标注所用解释器是否已验证；
   若目标机器没有 3.13，则退回 3.12（可正常安装与运行，但未做回归验证），
