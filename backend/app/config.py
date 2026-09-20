@@ -73,15 +73,33 @@ LLM_MODEL = os.getenv("LLM_MODEL", "qwen-plus").strip()
 LLM_CONNECT_TIMEOUT = float(os.getenv("LLM_CONNECT_TIMEOUT", "3.5"))
 LLM_READ_TIMEOUT = float(os.getenv("LLM_READ_TIMEOUT", "12"))
 
-# 是否启用大模型处方。False 时直接走内置模板，不再发起网络请求。
-LLM_ENABLED = bool(LLM_API_KEY)
 
-# 离线优先：ultralytics 在找不到权重/做 AMP 检查时会尝试联网下载，
+def _read_llm_switch() -> bool:
+    """读取 LLM_ENABLED 开关，默认开启。
+
+    语义：仅在显式设为 0/false/no/off 时关闭。关闭后不再发起任何网络请求，
+    处方直接走内置模板。
+    注意：**没有有效密钥时无论此开关如何都不会发起请求**（见下方 LLM_ENABLED 取值）。
+    """
+    raw = (os.getenv("LLM_ENABLED") or "").strip().lower()
+    if raw in ("0", "false", "no", "off"):
+        return False
+    return True
+
+
+# 是否启用大模型处方。
+# 必须同时满足「开关为开」且「存在有效密钥」—— 后者已由 _read_llm_key 过滤掉
+# 占位符与过短值。这样即使误把示例文件复制成 .env，也不会发起注定超时的请求。
+LLM_ENABLED = _read_llm_switch() and bool(LLM_API_KEY)
+
+# 离线优先：ultralytics 在找不到权重、做 AMP 检查或遥测时会尝试联网下载，
 # 而比赛现场网络不可控。默认置为离线模式，模型一律从本地加载。
+#
+# 已实测核实（ultralytics 8.4.137）：**真正生效的只有 YOLO_OFFLINE**。
+# 曾同时设置的 ULTRALYTICS_OFFLINE 在该版本源码中零引用、设了完全无效——
+# 这类"看起来设了、其实没生效"的开关比不设更危险（会让人误以为已封堵），
+# 故已移除。若将来升级 ultralytics，请重新核实生效的开关名。
 os.environ.setdefault("YOLO_OFFLINE", "true")
-os.environ.setdefault("ULTRALYTICS_OFFLINE", "true")
-# 关闭 ultralytics 的匿名遥测，避免演示机上出现无关外连
-os.environ.setdefault("YOLO_VERBOSE", "false")
 
 
 def ensure_dirs() -> None:

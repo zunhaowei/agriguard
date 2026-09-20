@@ -66,6 +66,13 @@ _*.py
 # --- 本机备份（清理前快照，不进仓库）---
 .workbuddy/backup/
 
+# --- 团队审查的临时探测产物 ---
+# 结论已沉淀到各 .md 报告里；这些是过程中的中间输出，不进版本控制。
+.workbuddy/review/_*
+.workbuddy/review/devops_*
+!.workbuddy/review/devops.md
+.workbuddy/verify_work/
+
 # --- IDE / 系统 ---
 .idea/
 .vscode/

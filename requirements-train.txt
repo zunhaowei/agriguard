@@ -8,8 +8,5 @@
 
 -r requirements.txt
 
-# ultralytics 在训练与结果绘图路径会用到
+# ultralytics 在训练与结果绘图路径会用到（推理路径不需要）
 matplotlib>=3.8
-
-# 大批量 csv/结果处理
-polars>=1.0

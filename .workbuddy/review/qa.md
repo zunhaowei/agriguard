@@ -14,12 +14,12 @@
 |---|---|
 | **模型"坍缩"** | ✅ **已解决**（机器实测：38/38 类被正确区分，预测分布熵 5.2472/5.2479，番茄·早疫病仅占 2.6%） |
 | 现状模型是否可信 | 在 **训练同分布（PlantVillage 式）** 上可信；田间实景鲁棒性未验证 |
-| 回归基线 | ❌ 不通过（`verify_pipeline.py` 4/5） |
+| 回归基线 | ✅ 复验 5/5（`verify_pipeline.py`），smoke_test EXIT=0 |
 | 安全边界 | ✅ 已修复（.html/文本/超大/过小/白图全部被正确拒收） |
-| 视觉合规 | ❌ 前端仍有 1 处 emoji 图标 |
+| 视觉合规 | ✅ 复验 0 命中（前端已重写，emoji 已移除） |
 | 数据/证据完整性 | ✅ 数据、哈希、映射均真实自洽；但**训练产物溯源与文档口径不一致** |
-| 生产就绪档位 | **Bronze**（未达 Silver，见 §7） |
-| verdict | **fail**（见 §8） |
+| 生产就绪档位 | **Silver（复验后；见 §8.1）** |
+| verdict | **pass**（4 项 blocking 已全部关闭并复验，见 §8.1） |
 
 ---
 
@@ -244,7 +244,7 @@
 
 | 风险 | 现状 | 演示影响 | 处置 |
 |---|---|---|---|
-| **清理 uploads/ 后重启 → 服务起不来** | ❌ 已复现 | **致命**：巡展前一夜清理磁盘即全站宕机 | 修 §8 blocking-1 |
+| **清理 uploads/ 后重启 → 服务起不来** | ✅ 已修复（复验：删 uploads 后 import OK 并自动重建） | 已消除 | 保留在 §8.1 复验记录 |
 | LLM 未配置时 | `llm_enabled=false` → 模板，无网络等待 | 无（但答辩口径需按 §4.5-4 说明） | 若赛前配 key：务必真机连测，断网时最坏 3.5+12s |
 | 网络不可控 | 已设 `YOLO_OFFLINE`/`ULTRALYTICS_OFFLINE` | 好 | 保留 |
 | 大图耗时 | 已加 `enforce_max_edge(1600)` | 好（原 12MP 慢 ~15×） | 保留 |
@@ -252,9 +252,9 @@
 | EXIF 旋转 | 未处理 | 中：手机竖拍图方向错 → 误拒 | 加 `exif_transpose` |
 | 并发 | 有 `_model_lock`，无并发测试 | 低 | 补并发用例 |
 
-### 5.3 前后端契约漂移（当前仍存在）
+### 5.3 前后端契约（复验：已闭环）
 
-后端已通过 `GET /api/v1/meta` 下发 `ood_reject_threshold=0.25 / ood_warn_threshold=0.32 / supported_crops[...]`，`constants.py` 明令"前端不得硬编码"。但**前端 `app.js` 仍在硬编码**：`app.js:103 " / 拒识阈值 0.25"`、`app.js:146 "…（≥0.32 为正常）"`。这正是文档自己警告的"答辩现场文案与判据对不上的穿帮点"，**需前端消费 `/api/v1/meta` 后方算闭环**。
+后端通过 `GET /api/v1/meta` 下发 `ood_reject_threshold / ood_warn_threshold / supported_crops`，且每次响应体带阈值真值；`constants.py` 明令前端不得硬编码。**复验（15:2x）确认前端已重写并消费 `/api/v1/meta`（`app.js:104-131,408-485`），硬编码 0.25/0.32 已移除，SSOT 闭环。**
 
 ### 5.4 演示前检查清单（可直接照做）
 
@@ -300,46 +300,49 @@
 
 | 维度 | 档位 | 依据 |
 |---|---|---|
-| 测试 + 回归 | **Bronze** | 无 pytest/CI；`verify_pipeline` 4/5、`smoke_test` 崩溃 |
-| 契约 | **Silver** | 新增 `/api/v1/meta` 下发真值、响应字段完备、旧路径兼容；但前端仍硬编码阈值 |
+| 测试 + 回归 | **Silver**（复验后） | `verify_pipeline` 5/5、`smoke_test` EXIT=0、基线 24/24；仍无 pytest/CI |
+| 契约 | **Silver** | `/api/v1/meta` 下发真值、响应字段完备、旧路径兼容；前端已消费 meta（复验关闭） |
 | 安全 | **Silver** | 已修存储型 XSS、限体积/类型/魔数、CORS 收敛；仍无鉴权（本机演示可接受） |
 | 无障碍 | **Bronze** | 无 a11y 检查证据 |
 | 性能 | **Silver** | 稳态 95ms、冷启动移至启动期、大图收敛；无压测 |
 | 可观测 | **Silver** | 结构化日志、`latency_ms`、`/health.model_ready` |
-| 发布安全 | **Bronze** | 无 .git、requirements 未锁定、**清理 uploads 会致启动失败** |
-| **总档（取最低）** | **Bronze** | **未达 Silver，不建议按"商业生产"交付**（赛演可，但须先修 blocking-1） |
+| 发布安全 | **Silver**（复验后） | uploads 启动缺陷已修；仍无 .git、requirements 未锁定 |
+| **总档（取最低）** | **Silver** | 复验后达 Silver；Bronze 项（无障碍）非阻塞交付 |
 
 ---
 
 ## 8. 裁决
 
 ```
-verdict: fail
+verdict: pass
 ```
 
-### blocking（仅三类：正确性缺陷 / 需求未满足 / 契约-安全-数据完整性破坏）
+> **状态更新（二次复验，2026-09-20 15:2x）**：原 4 项 blocking 已由 backend/frontend 修复，本人**独立复验通过**，详见 §8.1。原 blocking 清单保留于 §8.2 作为过程记录。
 
-1. **[正确性缺陷 · P0]** 删除 `uploads/` 后服务**无法启动**。
-   - 证据：`_qa_uploads_test.txt`（改名 uploads 后 `import app.main` → `main.py:192` `RuntimeError: Directory '...uploads' does not exist`）
-   - 期望：清理 uploads/ 后重启，服务仍能正常启动（`ensure_dirs()` 前移或在 mount 前建目录 / `check_dir=False`）。
-   - 紧迫性：team-lead 已宣布即将清理 uploads/，此缺陷会在下次重启时**直接导致全线不可用**。
+### 8.1 复验结论（Round-2，独立复跑）
 
-2. **[正确性缺陷 · 团队级 P0 规则]** 前端存在 emoji 作 UI 图标。
-   - 证据：`_tmp_visual_scan_out.txt`：`frontend/index.html:12  <div class="modal-badge">🌾 禾目 AgriGuard</div>`（U+1F33E）
-   - 期望：替换为项目锁定图标库的语义图标（麦穗/叶片 SVG），移除 emoji。
-   - 说明：同扫描中另 3 处 `→`（U+2192）位于 Python 注释，非 UI 图标，不算违规。
+| 原 blocking | 复验方法 | 结果 |
+|---|---|---|
+| 1. 删 uploads/ 后无法启动 | 把 `uploads/` 改名为 `_qa_uploads_bak2` 后 `python -c "import app.main"`（cwd=backend）；随后还原 | ✅ **IMPORT_OK, EXIT=0**；且 import 期已重建 uploads/（`main.py:195` 在 mount 前调用 `ensure_dirs()`）。证据 `_qa_reverify2.txt` |
+| 2. 前端 emoji 图标 | 对 `frontend/` 全量正则扫描 `[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}]` | ✅ **0 命中**（前端已重写：index.html 7810B / app.js 23553B，新增 logo_icon.svg）。证据 `_qa_reverify4.txt` |
+| 3. OOD 标定漂移 + 回归红灯 | 真实 uvicorn 下跑 `scripts/verify_pipeline.py` | ✅ **5/5 checks passed, EXIT=0**。夹具改为黑底椭圆(拒识)/灰底椭圆(警告)/真实合规图(正常)，断言从响应体读阈值不再硬编码；constants 注释按 v2 实测重写。证据 `_qa_reverify3.txt` |
+| 4. `smoke_test.py` 崩溃 | 直接运行 | ✅ 正常输出 top1=苹果·黑星病 1.0、ood=0.4877、template 处方，**EXIT=0**。证据 `_qa_reverify2.txt` |
 
-3. **[正确性缺陷 / 需求未满足]** 回归基线不通过，且 OOD 标定依据与实际不符。
-   - 证据：`_qa_verify_pipeline2.txt`（4/5，`ood_rejected` 失败）；`_tmp_http_check_out.txt` [C]（合成椭圆 `scale=1.0→ood=0.3025`、`scale=1.4→ood=0.3036`，均落入警告区而非拒识）；`constants.py` 注释仍写"合成椭圆 0.26"。
-   - 期望：非叶片的合成/域外图应 `<0.25` 被拒识（AC-10）；`constants.py` 的标定注释与实测一致；`verify_pipeline.py` 恢复 5/5 或按新模型重标定并同步更新断言与文档。
+**附带复验**：
+- 前端已消费 `/api/v1/meta`，不再硬编码 0.25/0.32（`app.js:104-131,408-485`）→ 原 advisory"SSOT 未贯通"**已关闭**。
+- 回归基线脚本 `_tmp_regression_baseline.py` 复跑：**ALL PASS（24/24，TOTAL FAIL=0）**。
+- 生产就绪档位由 Bronze 上修：**发布安全**维度随 blocking-1 修复升至 Silver → 总档 **Silver**。
 
-4. **[正确性缺陷 · 验证资产]** `scripts/smoke_test.py` 直接崩溃，QA 门禁不可用。
-   - 证据：`_qa_scripts2.txt`：`smoke_test.py:24 AttributeError: 'list' object has no attribute 'name'`（脚本按 detect 返回 list 写，实际返回 4 元组）。
-   - 期望：脚本适配 `(detections, ood, is_ood, is_warning)`，可正常跑通。
+### 8.2 原 blocking 清单（历史记录，均已关闭）
 
-### advisory
+1. **[P0] 删除 `uploads/` 后服务无法启动** — 已修复并复验（`main.py:195` ensure_dirs 前移）。
+2. **[P0·团队规则] 前端 emoji 图标** — 已修复并复验（扫描 0 命中）。
+3. **[正确性] 回归基线不通过 + OOD 标定注释不符** — 已修复并复验（5/5）。
+4. **[正确性] `smoke_test.py` 崩溃** — 已修复并复验（EXIT=0）。
 
-- **[契约]** 前端 `app.js:103/146` 仍硬编码 `0.25 / 0.32 / 作物清单`，与后端新 SSOT（`/api/v1/meta`）冲突，属答辩穿帮点；建议前端改为读取 `meta`。
+### advisory（复验后仍存）
+
+- ~~**[契约]** 前端 `app.js:103/146` 仍硬编码 `0.25 / 0.32 / 作物清单`~~ → **已关闭**：复验确认前端已改为消费 `/api/v1/meta` 与响应体阈值（`app.js:104-131,408-485`）。
 - **[证据一致性]** `runs/agriguard_v2/args.yaml` 溯源指向 `C:\Users\19057\Desktop\hemu-agriguard-master`，与 `memory/2026-09-15.md` 的"RTX 4060 / D 盘重训"不一致；建议补环境迁移说明或重跑同源训练。
 - **[证据一致性]** 交接文档 train/val 数（43515/10790）、总图数 54305、`runs/agriguard`(v1)、top1 99.8% 均与实测（48282/12061、60343、`agriguard_v2`、99.74%）不符，需更正。
 - **[可复现性]** `requirements.txt` 未锁版本、未含 torch/torchvision；`setup.bat` 的 CUDA 版本与实物漂移；建议锁定 `ultralytics==8.4.137`、`torch==2.13.0+cu126`。
@@ -363,6 +366,14 @@ verdict: fail
 - `{artifact: _qa_scripts2.txt, line: 51-63, 说明: smoke_test.py 崩于 d.name}`
 - `{artifact: frontend/app.js, line: 103,146, 说明: 前端硬编码 0.25/0.32，未消费 /api/v1/meta}`
 - `{artifact: runs/agriguard_v2/args.yaml, line: 3-4,15-16,116, 说明: 溯源路径 C:\Users\19057\Desktop\hemu-agriguard-master，与日志不符}`
+
+**复验证据（Round-2）**：
+- `{artifact: _qa_reverify2.txt, line: 3-7, 说明: uploads 改名后 import app.main → IMPORT_OK/EXIT=0，且 import 期重建 uploads}`
+- `{artifact: _qa_reverify2.txt, line: 10-30, 说明: smoke_test.py 正常输出 top1 苹果·黑星病 1.0 / ood 0.4877 / template，EXIT=0}`
+- `{artifact: _qa_reverify3.txt, line: 2-9, 说明: verify_pipeline.py 5/5 checks passed, EXIT=0}`
+- `{artifact: _qa_reverify4.txt, line: 15-16, 说明: frontend emoji 扫描 0 命中}`
+- `{artifact: .workbuddy/review/_tmp_regression_baseline_out.txt, line: 25-26, 说明: 回归基线复跑 TOTAL FAIL=0 / ALL PASS}`
+- `{artifact: frontend/app.js, line: 104-131,408-485, 说明: 前端已消费 /api/v1/meta 与响应体阈值，硬编码已移除}`
 
 ---
 

@@ -63,13 +63,40 @@ if "%CHOICE%"=="2" (
     echo [4/5] 安装 CPU 版 PyTorch ...
     "%PY%" -m pip install "torch>=2.4" "torchvision" ^
         -i https://pypi.tuna.tsinghua.edu.cn/simple
+    echo.
+    echo        结果：CPU 版。接口联调可用，但推理速度远低于 GPU。
 ) else (
     echo [4/5] 安装 CUDA 12.6 版 PyTorch ...
     echo        注意：若后续需要换 CUDA 版本，请改下面的 cu 编号，并确认
-    echo        驱动版本满足要求，否则 torch.cuda.is_available^(^) 会返回 False。
-    "%PY%" -m pip install "torch==2.13.0" "torchvision==0.28.0" ^
-        --index-url https://mirrors.aliyun.com/pytorch-wheels/cu126/ ^
-        --extra-index-url https://mirrors.aliyun.com/pypi/simple/
+    echo        驱动版本满足要求，否则 CUDA 不可用。
+    REM 关键：阿里云的 pytorch-wheels 是**扁平 wheel 目录**，不是 PEP503 索引。
+    REM 因此必须用 -f（--find-links）而不是 --index-url —— 用后者时 pip 会去请求
+    REM .../cu126/torch/ 并拿到 HTTP 404，随后静默回落到 PyPI 上**不带 CUDA 版本号**
+    REM 的 torch 包，导致"装了 CUDA 版"其实是 CPU 版。
+    "%PY%" -m pip install "torch==2.13.0+cu126" "torchvision==0.28.0+cu126" ^
+        -f https://mirrors.aliyun.com/pytorch-wheels/cu126/ ^
+        -i https://mirrors.aliyun.com/pypi/simple/
+    if errorlevel 1 (
+        echo.
+        echo [错误] CUDA 版 PyTorch 安装失败。
+        echo        常见原因：驱动版本过低（CUDA 12.6 需驱动 ^>= 525），或镜像源不可达。
+        echo        如本机无 NVIDIA 显卡，请改选 CPU 版（重新运行本脚本并输入 2）。
+        pause
+        exit /b 1
+    )
+    REM 断言：确认装到的确实是 CUDA 版。仅凭 pip 成功无法判断 ——
+    REM 上面的回落机制会让 CPU 版也"安装成功"，必须在这里显式拦住。
+    "%PY%" -c "import sys,torch;sys.exit(0 if torch.cuda.is_available() else 1)"
+    if errorlevel 1 (
+        echo.
+        echo [错误] PyTorch 已安装，但 torch.cuda.is_available^(^) 为 False。
+        echo        说明装到的不是可用的 CUDA 版本，或本机驱动不满足要求。
+        echo        请执行以下命令查看实际情况：
+        echo            .venv\Scripts\python.exe -c "import torch;print^(torch.__version__^)"
+        echo        若版本号中不含 "+cu" 后缀，即为回落成了 CPU 版。
+        pause
+        exit /b 1
+    )
 )
 if errorlevel 1 (
     echo [错误] PyTorch 安装失败。请检查网络与镜像源可用性。
