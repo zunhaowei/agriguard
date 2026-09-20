@@ -728,8 +728,46 @@ evidence:
 
 ---
 
+## E. 审计后追加：修复落地复核与归属记录
+
+> 本节在首版报告（15:25:47 落盘）之后追加。目的：让评审能对上"谁改的、改了什么、谁复核的"。
+
+### E1. 归属记录（避免评审时对不上）
+
+- 本审计**未修改任何项目代码或脚本**，全部写入仅在 `.workbuddy\review\`。
+- 报告落盘后，**另有同事依据本报告完成落盘并代为提交**，提交 `eaa4209`，提交信息为「修正 CUDA 安装分支静默退化为 CPU 版；清理无效开关；并入运维维度审查」。
+- 相关文件落盘时间（均晚于本报告 15:25:47）：`setup.bat` 15:26:37、`config.py` 15:26:46、`run.bat` 15:26:58、`.env.example` 15:27:11。
+- 更早一轮（14:53–14:54：`requirements.txt` / `setup.bat` / `run.bat` / `.env.example` / `.gitignore`）发生在本审计开始之前，亦非本审计所为。
+- `git status --porcelain` 对项目文件为空（工作区干净）。
+
+### E2. 修复复核结果（逐条读文件复核，非采信转述）
+
+| 项 | 状态 | 复核依据 |
+|---|---|---|
+| B-1（blocking）setup.bat CUDA 分支 | **已修复** | `setup.bat` line 72–99：改用 `-f https://mirrors.aliyun.com/pytorch-wheels/cu126/` + `torch==2.13.0+cu126` / `torchvision==0.28.0+cu126`；分支内新增 CUDA 硬断言，失败即 `exit /b 1`，注释明确写出"pip 成功 ≠ 装到 CUDA 版"。与本报告 §C 的期望完全一致 |
+| A-1 `ULTRALYTICS_OFFLINE` 无效开关 | **已修复** | `config.py` line 95–102：已无任何 set 调用，仅保留解释性注释（并注明"若升级 ultralytics 请重新核实生效开关名"）；全仓 grep 无 set |
+| A-2 `LLM_ENABLED` 无效开关 | **已修复** | `config.py` line 77–93：新增 `_read_llm_switch()`（仅 `0/false/no/off` 关闭），`LLM_ENABLED = _read_llm_switch() and bool(LLM_API_KEY)`，语义与期望一致 |
+| A-3 `.env.example` 与实现对齐 | **已修复** | `.env.example` 已改写为新语义（显式关闭的取值 + "无有效 key 时不发请求"） |
+| A-4 run.bat 窗口标题 / 模型缺失处置 | **已修复** | `run.bat` 15:26:58 重写（未逐字复核，属建议级别） |
+
+### E3. 残留小项（非阻塞，建议顺手处理）
+
+`setup.bat` line 25–26 探测 Python 时的优先级是 `py -3.12` → `py -3.13` → `python`。本机 `py -3.12` **存在**（`C:\Users\weizunhao\AppData\Local\Programs\Python\Python312`），因此在**这台机器上**跑全新 `setup.bat` 会建出 **3.12** 的 venv，而实测验证环境是 **3.13.14**（`.venv\pyvenv.cfg` 的 `version = 3.13.14`）。
+
+- **不构成失败**（已实测核实）：`https://mirrors.aliyun.com/pytorch-wheels/cu126/`（共 1298 个 whl）中 cp312 与 cp313 的 Windows wheel 均在：
+  `torch-2.13.0+cu126-cp312-cp312-win_amd64.whl`、`torch-2.13.0+cu126-cp313-cp313-win_amd64.whl`、
+  `torchvision-0.28.0+cu126-cp312-cp312-win_amd64.whl`、`torchvision-0.28.0+cu126-cp313-cp313-win_amd64.whl`。
+- **但"能装"不等于"与验证过的环境一致"**：3.12 venv 从未跑过 `scripts/verify_pipeline.py`。建议把 3.13 提到 3.12 之前，或至少注明"3.13 为实机验证版本，3.12 可用但未验证"。
+
+### E4. 遗留的未验证项（承 §C）
+
+U1–U4 仍成立。其中 U1（aliyun PyPI 上无本地版本号的 `torch-2.13.0` 是否自带 CUDA）**已失去实际意义**：修复后 setup.bat 不再走该回落路径，只从 `-f .../cu126/` 取带 `+cu126` 的构建。
+
+---
+
 ## 变更记录
 
 | 日期 | 变更 | 原因 |
 |---|---|---|
 | 2026-09-20 | 首次生成 | 运维审计：依赖可复现性 + 部署/现场演示健壮性 |
+| 2026-09-20 | 追加 §E | 修复落地复核、归属记录、残留小项（Python 3.12/3.13 优先级） |

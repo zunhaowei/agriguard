@@ -982,6 +982,14 @@ document.getElementById('agri-origin-fingerprint').dataset
 </table>
 <p><b>总档：Bronze</b>（未达商业级 Silver）。对「学生竞赛作品 + 本机演示」这一目标形态已足够；
 若要对外提供服务，需按上表逐项补齐。</p>
+<blockquote>
+  <p><b>关于档位的口径说明（避免两套刻度混用）。</b>
+  上表由运维维度按<b>生产就绪度</b>标准给出。质量维度（QA）在完成复验后也给出过一个档位评估，
+  其口径是<b>「本次交付的缺陷与验证是否达标」</b>，结论落在其 Silver 线上。
+  两者<b>不是同一个刻度</b>：一个问「能不能对外当服务发布」，一个问「这一版交付质量是否合格」。
+  拉低运维档位的是测试体系、可观测性与发布安全三项工程化缺口，与本次修复内容无关；
+  补齐动作见 <code>devops.md</code> §D 的 5 条最小项。</p>
+</blockquote>
 
 <h3>证据附录</h3>
 <p>七份详细审查报告保存在 <code>.workbuddy/review/</code>，均含 <code>文件:行号</code> 级证据：</p>

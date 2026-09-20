@@ -21,17 +21,26 @@ if "%CHOICE%"=="" set "CHOICE=1"
 REM ---- 1. 定位可用的 Python ----
 echo.
 echo [1/5] 检查 Python ...
+REM 优先 3.13：本项目的 .venv 与全部验证（含回归 5/5 通过）均在 Python 3.13.14 上完成。
+REM 3.12 也能装（cu126 索引同时提供 cp312 / cp313 的 Windows wheel），
+REM 但注意：3.12 这套组合**从未跑过 scripts\verify_pipeline.py**，属未验证路径。
+REM 因此这里刻意把 3.13 排在前面，避免在同时装了 3.12 的机器上悄悄建出未验证环境。
 set "PYCMD="
-py -3.12 -c "import sys" >nul 2>&1 && set "PYCMD=py -3.12"
-if not defined PYCMD py -3.13 -c "import sys" >nul 2>&1 && set "PYCMD=py -3.13"
+set "PYDESC="
+py -3.13 -c "import sys" >nul 2>&1 && set "PYCMD=py -3.13"
+if defined PYCMD set "PYDESC=3.13（本项目已验证版本）"
+if not defined PYCMD py -3.12 -c "import sys" >nul 2>&1 && set "PYCMD=py -3.12"
+if not defined PYDESC if defined PYCMD set "PYDESC=3.12（未验证路径，建议改用 3.13）"
 if not defined PYCMD python -c "import sys" >nul 2>&1 && set "PYCMD=python"
+if not defined PYDESC if defined PYCMD set "PYDESC=系统默认 python（版本未确认）"
 if not defined PYCMD (
-    echo [错误] 未找到可用的 Python 解释器。
-    echo        请安装 Python 3.12 或 3.13，并勾选 "Add Python to PATH"。
+    echo        [错误] 未找到可用的 Python 解释器。
+    echo        请安装 Python 3.13（推荐，本项目已验证版本）或 3.12，
+    echo        安装时勾选 "Add Python to PATH"。
     pause
     exit /b 1
 )
-echo        使用解释器：%PYCMD%
+echo        使用解释器：%PYCMD%  —— %PYDESC%
 
 REM ---- 2. 创建虚拟环境 ----
 echo.
