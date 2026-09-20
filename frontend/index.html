@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<!--
+  禾目 AgriGuard · 作物病虫害智能诊断与精准处方系统
+  原创作品标识 AGRI-GUARD / v1.0 / 2026-09-20
+  本页面前端由禾目团队独立设计与编写。作品指纹见运行期控制台与页脚 DOM 标记。
+-->
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="拍一张病叶照片，自动识别作物与病害，输出病灶定位与防治处方。" />
+  <meta name="author" content="AgriGuard" />
+  <title>禾目 AgriGuard · 作物病虫害智能诊断与精准处方系统</title>
+  <link rel="icon" type="image/svg+xml" href="/static/logo_icon.svg" />
+  <link rel="stylesheet" href="/static/styles.css?v=6" />
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <div class="brand">
+        <img class="brand-mark" src="/static/logo_icon.svg" alt="" width="32" height="32" />
+        <span class="brand-name">禾目<span class="brand-latin">AgriGuard</span></span>
+      </div>
+      <span class="badge-compliance">AI 辅助制作</span>
+    </header>
+
+    <main>
+      <section class="hero">
+        <h1>拍一张病叶照片<br />秒出诊断与防治处方</h1>
+        <p class="hero-sub">
+          单模型覆盖 14 种作物、38 类病害与健康状态。<b>无需先判断这是什么作物</b>——
+          系统自动识别作物与病害，并给出病灶定位。
+        </p>
+      </section>
+
+      <section class="card" aria-labelledby="step-upload">
+        <h2 class="card-title" id="step-upload"><span class="step-no">1</span>上传病叶照片</h2>
+
+        <div
+          id="dropzone"
+          class="dropzone"
+          role="button"
+          tabindex="0"
+          aria-label="上传病叶照片，可点击选择或拖拽文件到此处"
+        >
+          <div class="icon" aria-hidden="true">
+            <svg xmlns="http://www.w3.org/2000/svg" width="44" height="44" viewBox="0 0 24 24"
+                 fill="none" stroke="currentColor" stroke-width="1.75"
+                 stroke-linecap="round" stroke-linejoin="round">
+              <path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242" />
+              <path d="M12 12v9" />
+              <path d="m16 16-4-4-4 4" />
+            </svg>
+          </div>
+          <input type="file" id="file" accept="image/*" hidden />
+          <p class="dropzone-main">点击或拖拽照片到此处</p>
+          <p class="dropzone-hint" id="dropzone-hint">支持 JPG / PNG / WEBP / BMP</p>
+        </div>
+
+        <ul class="shoot-guide">
+          <li>
+            <svg class="ico" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                 stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z" />
+              <circle cx="12" cy="13" r="3" />
+            </svg>
+            <span>单片叶片，叶面展开无遮挡</span>
+          </li>
+          <li>
+            <svg class="ico" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                 stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <rect width="18" height="18" x="3" y="3" rx="2" />
+            </svg>
+            <span>平铺在纯色背景上（白纸、灰布、白瓷面）</span>
+          </li>
+          <li>
+            <svg class="ico" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                 stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="m5 12 7-7 7 7" />
+              <path d="M12 19V5" />
+            </svg>
+            <span>从正上方垂直拍摄，避免阴影与反光</span>
+          </li>
+        </ul>
+
+        <div class="demo-row">
+          <img class="demo-thumb" id="demo-thumb" src="/static/_demo_leaf_compliant.jpg"
+               alt="合规拍摄示例：单片叶片平铺在纯色背景上" />
+          <div class="demo-text">
+            <p class="demo-title">没有现成照片？</p>
+            <button id="demo-btn" type="button" class="btn btn-secondary">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                   stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <rect width="18" height="18" x="3" y="3" rx="2" ry="2" />
+                <circle cx="9" cy="9" r="2" />
+                <path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21" />
+              </svg>
+              使用示例病叶图
+            </button>
+          </div>
+        </div>
+
+        <details class="crops">
+          <summary>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                 stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="m6 9 6 6 6-6" />
+            </svg>
+            <span>当前可识别作物<span id="crops-count"></span></span>
+          </summary>
+          <p id="crops-list">加载中…</p>
+        </details>
+
+        <div class="preview-wrap" id="preview-wrap" hidden>
+          <img id="preview" class="preview" alt="待诊断的病叶照片预览" />
+        </div>
+
+        <div id="status" class="status" role="status" aria-live="polite"></div>
+      </section>
+
+      <section id="result" class="card result" hidden aria-labelledby="step-verdict">
+        <h2 class="card-title" id="step-verdict"><span class="step-no">2</span>诊断结论</h2>
+        <div id="verdict" class="verdict"></div>
+
+        <div id="heatmap-block" class="sub-block" hidden>
+          <h3 class="sub-title">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                 stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <circle cx="12" cy="12" r="10" />
+              <line x1="22" x2="18" y1="12" y2="12" />
+              <line x1="6" x2="2" y1="12" y2="12" />
+              <line x1="12" x2="12" y1="6" y2="2" />
+              <line x1="12" x2="12" y1="22" y2="18" />
+            </svg>
+            模型注意力可视化
+          </h3>
+          <img id="heatmap-img" class="heatmap-img" alt="病灶热力图，颜色越暖表示模型越关注的病斑区域" />
+          <div class="heat-legend">
+            <span class="heat-legend-label">关注度 低</span>
+            <span class="heat-legend-bar" aria-hidden="true"></span>
+            <span class="heat-legend-label">高</span>
+          </div>
+          <p class="heat-note">
+            颜色越暖表示模型判断该区域的依据越强，即可能的病斑位置；它反映「模型在看哪里」，
+            不等同于病害严重程度。
+          </p>
+        </div>
+
+        <div id="detail-block" class="sub-block"></div>
+
+        <h2 class="card-title" id="step-rx"><span class="step-no">3</span>防治处方</h2>
+        <div id="prescription" class="prescription"></div>
+      </section>
+    </main>
+
+    <footer>
+      <p>智慧农业 · 减肥减药 · 数字乡村</p>
+      <p class="footer-note">本作品使用 AI 辅助开发，对外材料已标注「AI 辅助制作」。</p>
+      <span
+        id="agri-origin-fingerprint"
+        data-work="AGRI-GUARD"
+        data-ver="v1.0"
+        data-ts="2026-09-20"
+        data-signature="HM-AG-2026-0920"
+        aria-hidden="true"
+        class="sr-only"
+      >禾目 AgriGuard 原创作品 · AGRI-GUARD / v1.0 / 2026-09-20</span>
+    </footer>
+  </div>
+
+  <script src="/static/app.js?v=6"></script>
+</body>
+</html>

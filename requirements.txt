@@ -1,0 +1,31 @@
+# 禾目 AgriGuard —— 推理运行时依赖（最小集）
+#
+# 安装请用 setup.bat，不要直接 pip install -r 本文件：
+# PyTorch 需要按本机 CUDA 版本从对应 wheel 索引单独安装，
+# 直接跑本文件会装成 CPU 版，导致 GPU 推理失效（setup.bat 已处理这个顺序）。
+#
+# ⚠️ ultralytics 必须锁定在 8.4.137，不要放宽：
+#    8.4.153 的 predict 会对模型做 deepcopy，与 detector.py 的 forward hook 冲突，
+#    抛 "cannot pickle '_thread.lock' object" 导致推理完全不可用。
+#    8.4.137 为本项目实测验证版本。
+#    修改此版本号前，请先跑 scripts/verify_pipeline.py 确认热力图仍能生成。
+ultralytics==8.4.137
+
+# Web 服务
+fastapi>=0.115,<1.0
+uvicorn[standard]>=0.29,<1.0
+python-multipart>=0.0.9
+pydantic>=2.6,<3.0
+
+# 配置加载（config.py 使用 python-dotenv 解析 .env）
+python-dotenv>=1.0,<2.0
+
+# 数值与图像
+# 注：numpy 2.x 与 opencv 5.x 属于较大的版本跨度，本项目已在
+# numpy 2.5.3 / opencv-python 5.0.0.93 上完成端到端验证。
+numpy>=1.26,<3.0
+opencv-python>=4.9,<6.0
+pillow>=10.0
+
+# 大模型处方（通义千问兼容 OpenAI 协议）
+requests>=2.31,<3.0

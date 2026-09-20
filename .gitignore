@@ -1,0 +1,79 @@
+# ============================================================================
+# 禾目 AgriGuard .gitignore
+#
+# 设计原则（本次审查重写）：
+#   「代码进版本控制，大体积数据不进，但参赛证据必须进」
+#
+# 背景：原 .gitignore 直接忽略 runs/ 与 data/，但 runs/agriguard_v2/ 下的
+# results.csv / 混淆矩阵 / 训练曲线是原创性举证的**硬证据**（iCAN 原创性 20 分
+# 要求"开发过程可追溯、佐证材料真实有效"），必须纳入版本控制。
+# 因此这里改为「忽略 runs 下的中间图像，保留训练记录」。
+# ============================================================================
+
+# --- 密钥（严禁提交）---
+.env
+.env.local
+*.local
+
+# --- Python ---
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.ipynb_checkpoints/
+
+# --- 数据集（体量大，可由脚本重新下载整理）---
+# 注意：用 data/*（而非 data/）才能配合 ! 规则保留目录内的 .gitkeep
+data/*
+!data/.gitkeep
+
+# --- 运行时产物（用户上传内容属于用户数据，不进仓库）---
+uploads/*
+!uploads/.gitkeep
+
+# --- 训练产物 ---
+# 保留训练记录与曲线（参赛证据），忽略批次预览图与权重副本
+runs/**/weights/
+runs/**/train_batch*.jpg
+runs/**/val_batch*.jpg
+runs/**/*.cache
+runs/**/labels.jpg
+
+# --- 媒体素材（体积大；如需交付请单独打包，不要进 git）---
+media/
+*.mp4
+*.mov
+素材与源代码/
+参赛材料/
+
+# --- 构建 / 临时目录 ---
+.chrome_tmp/
+.edge_tmp/
+.edge_tmp_b/
+_lo_profile/
+_supporting_stage/
+.bak/
+*.bak
+
+# --- 本机日志与临时输出 ---
+*.log
+_*.txt
+_*.json
+_*.py
+!package.json
+
+# --- 本机备份（清理前快照，不进仓库）---
+.workbuddy/backup/
+
+# --- IDE / 系统 ---
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# --- 明确保留（防止被上面的通配规则误伤）---
+!requirements.txt
+!requirements-train.txt
+!docs/*.md

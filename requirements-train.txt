@@ -1,0 +1,15 @@
+# 禾目 AgriGuard —— 训练与数据处理专用依赖（推理部署不需要）
+#
+# 只在需要重新训练模型或整理数据集时安装：
+#   .venv\Scripts\python.exe -m pip install -r requirements-train.txt -i https://pypi.tuna.tsinghua.edu.cn/simple
+#
+# 说明：本文件继承推理依赖，再叠加训练侧需求。
+# 这样"复现训练"与"部署运行"的依赖边界清晰，部署镜像可以不带绘图库。
+
+-r requirements.txt
+
+# ultralytics 在训练与结果绘图路径会用到
+matplotlib>=3.8
+
+# 大批量 csv/结果处理
+polars>=1.0
