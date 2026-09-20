@@ -1,0 +1,942 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>禾目 AgriGuard · 项目审查与优化报告</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+:root{
+  --accent:#2E7D4F; --accent-dark:#1F5E3A; --accent-light:#EAF5EE; --accent-border:#BFE0CC;
+  --teal:#0E7490; --teal-light:#E4F3F8;
+  --text:#1F2933; --text-2:#4A5568; --text-3:#64748B;
+  --line:#E2E8F0; --line-2:#CBD5E1;
+  --surface:#FFFFFF; --surface-soft:#F8FAFC; --surface-ref:#F1F5F9;
+  --danger:#C0392B; --danger-bg:#FDECEA; --danger-strong:#A32D2D;
+  --warn:#8A6D3B; --warn-bg:#FFF9E6;
+  --ok:#2E7D4F; --ok-bg:#EAF5EE;
+  --radius:12px;
+}
+*{box-sizing:border-box}
+body{
+  margin:0; padding:0 0 60px;
+  font-family:Inter,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;
+  font-size:15px; line-height:1.75; color:var(--text);
+  background:linear-gradient(180deg,#F6FBF8 0%,#EDF5EF 100%);
+}
+.wrap{width:min(920px,100%); margin:0 auto; padding:0 20px}
+h1{font-size:28px;font-weight:500;line-height:1.35;margin:0}
+h2{font-size:20px;font-weight:500;margin:44px 0 14px;padding-bottom:8px;border-bottom:1px solid var(--line)}
+h3{font-size:16px;font-weight:500;margin:26px 0 10px}
+h4{font-size:14px;font-weight:500;margin:18px 0 8px;color:var(--text-2)}
+p{margin:10px 0}
+ul,ol{margin:10px 0;padding-left:22px}
+li{margin:5px 0}
+code{font-family:"JetBrains Mono",Consolas,monospace;font-size:12.5px;background:var(--surface-ref);padding:1px 5px;border-radius:4px;color:var(--accent-dark)}
+pre{background:#1F2933;color:#E6EDF3;padding:14px 16px;border-radius:10px;overflow-x:auto;font-size:12.5px;line-height:1.6}
+pre code{background:none;color:inherit;padding:0}
+header{padding:44px 0 20px}
+.brand{display:flex;align-items:center;gap:12px;margin-bottom:18px}
+.brand svg{display:block}
+.brand-name{font-size:17px;font-weight:500}
+.lead{color:var(--text-2);max-width:62ch;margin:14px 0 0}
+.meta{margin-top:20px;font-size:13px;color:var(--text-3)}
+.badge{display:inline-block;font-size:12px;padding:3px 10px;border-radius:999px;border:1px solid var(--accent-border);background:var(--accent-light);color:var(--accent-dark);margin-right:6px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:20px 22px;margin:18px 0;box-shadow:0 1px 2px rgba(31,41,51,.04)}
+table{width:100%;border-collapse:collapse;margin:14px 0;font-size:13.5px}
+th,td{text-align:left;padding:9px 11px;border-bottom:1px solid var(--line);vertical-align:top}
+th{background:var(--surface-soft);font-weight:500;color:var(--text-2);white-space:nowrap}
+tbody tr:hover{background:var(--surface-soft)}
+.num{font-family:"JetBrains Mono",Consolas,monospace;font-variant-numeric:tabular-nums;font-size:13px}
+.tag{display:inline-block;font-size:11.5px;padding:2px 8px;border-radius:999px;white-space:nowrap;font-weight:500}
+.t-p0{background:var(--danger-bg);color:var(--danger-strong);border:1px solid #F2C4BE}
+.t-p1{background:var(--warn-bg);color:var(--warn);border:1px solid #E8D9A8}
+.t-p2{background:var(--surface-ref);color:var(--text-2);border:1px solid var(--line-2)}
+.t-done{background:var(--ok-bg);color:var(--accent-dark);border:1px solid var(--accent-border)}
+.t-open{background:var(--surface-ref);color:var(--text-3);border:1px solid var(--line-2)}
+.kpi{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin:18px 0}
+.kpi div{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px 16px}
+.kpi .v{font-size:24px;font-weight:500;line-height:1.2;font-variant-numeric:tabular-nums}
+.kpi .v.g{color:var(--accent)}
+.kpi .v.r{color:var(--danger-strong)}
+.kpi .l{font-size:12.5px;color:var(--text-3);margin-top:4px}
+blockquote{margin:14px 0;padding:12px 16px;background:var(--surface-ref);border-left:3px solid var(--accent);border-radius:0 8px 8px 0;color:var(--text-2);font-size:14px}
+blockquote.warn{background:var(--warn-bg);border-left-color:var(--warn)}
+blockquote.danger{background:var(--danger-bg);border-left-color:var(--danger)}
+blockquote p{margin:6px 0}
+footer{margin-top:50px;padding-top:18px;border-top:1px solid var(--line);font-size:12.5px;color:var(--text-3);text-align:center}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <div class="brand">
+    <svg width="34" height="34" viewBox="0 0 128 128" aria-hidden="true">
+      <defs>
+        <linearGradient id="rp-top" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#86EFAC"/><stop offset="1" stop-color="#4ADE80"/></linearGradient>
+        <linearGradient id="rp-bot" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#22C55E"/><stop offset="1" stop-color="#15803D"/></linearGradient>
+      </defs>
+      <path d="M11 64 C 11 22, 50 10, 64 10 C 78 10, 117 22, 117 64 L 64 64 Z" fill="url(#rp-top)"/>
+      <path d="M11 64 C 11 106, 50 118, 64 118 C 78 118, 117 106, 117 64 L 64 64 Z" fill="url(#rp-bot)"/>
+      <circle cx="64" cy="64" r="20" fill="#06B6D4"/><circle cx="64" cy="64" r="11" fill="#0E7490"/><circle cx="64" cy="64" r="4.5" fill="#FFF"/>
+    </svg>
+    <span class="brand-name">禾目 AgriGuard</span>
+  </div>
+  <h1>项目审查与优化报告</h1>
+  <p class="lead">
+    对「禾目 AgriGuard — 作物病虫害智能诊断与精准处方系统」开展的代码质量评估、缺陷与安全隐患排查、
+    依赖与配置项检查、重构与优化建议，以及面向 iCAN 创新赛道国奖目标的技术与答辩策略。
+    本报告同时记录已落地的修复与工程清理。
+  </p>
+  <p class="meta">
+    <span class="badge">审查日期 2026-09-20</span>
+    <span class="badge">代码基线 d5b8053</span>
+    <span class="badge">六维并行审查</span>
+  </p>
+</header>
+
+<!-- ============================================================ -->
+<h2>一、执行摘要</h2>
+
+<div class="kpi">
+  <div><div class="v g">7.0 GB</div><div class="l">工程清理释放空间</div></div>
+  <div><div class="v g">7 项</div><div class="l">已修复的正确性缺陷</div></div>
+  <div><div class="v r">5 类</div><div class="l">已封堵的安全隐患</div></div>
+  <div><div class="v g">5/5</div><div class="l">端到端回归测试</div></div>
+  <div><div class="v">1</div><div class="l">首个版本控制快照</div></div>
+</div>
+
+<h3>1.1 项目定性</h3>
+<p>
+  <b>算法层是真资产，工程层是欠债区。</b>
+  算法部分（拍摄形式前置校验、OOD 分布外拒识、Grad-CAM++ 病灶定位、色温异常通道）
+  四者互不重复、各有实测标定依据，是与同赛道竞品形成分野的差异化内核，本次<b>未改动其算法逻辑与标定阈值</b>。
+  工程部分（并发模型、安全边界、契约一致性、依赖锁定、仓库卫生）问题密集，
+  但绝大多数属于低风险可渐进修复的欠债。
+</p>
+
+<h3>1.2 最关键的三个发现</h3>
+
+<blockquote class="danger">
+  <p><b>发现一 · 虚拟环境已损坏，项目根本无法启动。</b>
+  <code>.venv/pyvenv.cfg</code> 中的基础解释器路径指向一个<b>已不存在的用户目录</b>，
+  导致 <code>.venv\Scripts\python.exe</code> 直接报 <code>did not find executable</code>，
+  <code>run.bat</code> 完全无法运行。项目的 4.57 GB 依赖包体完好，仅此一行配置失效。
+  已修复（备份 <code>pyvenv.cfg.bak</code>），修复后
+  <code>torch 2.13.0+cu126 / CUDA 可用 / ultralytics 8.4.137</code> 全部正常。</p>
+</blockquote>
+
+<blockquote class="danger">
+  <p><b>发现二 · 存在已实测复现的同源存储型 XSS。</b>
+  原实现把<b>用户可控的文件后缀</b>直接拼进落盘文件名，而 <code>/uploads</code> 是静态挂载。
+  审查中实际上传了一个 HTML 文件，<code>GET /uploads/&lt;uuid&gt;.html</code>
+  返回 <b>200 + Content-Type: text/html</b>，浏览器会把它当同源页面执行，
+  脚本可读取本页 DOM 与 <code>localStorage</code>。已通过
+  「体积上限 + 扩展名白名单 + <b>真实魔数校验</b>」三道检查封堵（含改扩展名绕过）。</p>
+</blockquote>
+
+<blockquote class="danger">
+  <p><b>发现三 · 核心差异化能力 OOD 拒识的阈值，是按重训前的旧模型标定的。</b>
+  项目开发文档中整套标定数据（合规图 0.43 / 枫叶 0.33 / 合成椭圆 0.26 / 葡萄叶 0.19）
+  均来自 2026-09-01 的首轮模型；而 <b>2026-09-15 用 60,343 张数据重训了 v2 模型</b>，
+  特征空间随之改变——连项目自带的合规示例图都从约 0.43 变为 0.3691。
+  阈值 0.25/0.32 未随之复核。更直接的影响是：
+  <b>合成图形已无法触发拒识区</b>，现场演示「拒识」环节必须改用真实非支持作物叶片照片。
+  详见第七节。</p>
+</blockquote>
+
+<h3>1.3 一个必须说明的过程事实</h3>
+<p>
+  本项目的代码从未纳入版本控制（无 <code>.git</code>）。这意味着审查开始前
+  <b>无法先做一次基线快照再动手</b>。为弥补，审查阶段记录了全部关键文件的 SHA-256 指纹，
+  且六份详细审查报告（<code>.workbuddy/review/</code>）逐条给出了
+  <code>文件:行号</code> 级的证据，修改前后的差异可据此核对。
+  首个提交 <code>d5b8053</code> 已建立基线，此后的任何改动都可回滚。
+</p>
+
+<!-- ============================================================ -->
+<h2>二、项目结构概览</h2>
+
+<p>项目呈现「源码极轻、数据极重」的形态：</p>
+
+<table>
+  <thead><tr><th>指标</th><th>审查前</th><th>审查后</th><th>说明</th></tr></thead>
+  <tbody>
+    <tr><td>文件总数</td><td class="num">125,190</td><td class="num">86,379</td><td>删除冗余数据与运行时残骸</td></tr>
+    <tr><td>总体积</td><td class="num">12,530 MB</td><td class="num">5,490 MB</td><td><b>释放约 7.0 GB</b></td></tr>
+    <tr><td>源码 / 配置 / 文档</td><td class="num">约 60 个</td><td class="num">约 60 个</td><td>不到 1 MB，占体积不足 0.01%</td></tr>
+    <tr><td>Python（业务 + 脚本）</td><td class="num">43 个</td><td class="num">44 个</td><td>新增 <code>constants.py</code>、<code>model_arch.py</code>、<code>imaging.py</code></td></tr>
+    <tr><td>前端</td><td class="num">3 个</td><td class="num">4 个</td><td>新增品牌 SVG 资源</td></tr>
+  </tbody>
+</table>
+
+<h3>2.1 运行时数据流</h3>
+<pre><code>浏览器 frontend/index.html
+        │  POST /api/v1/predict   (multipart 单张图)
+        ▼
+main.py  _run_predict()
+        ├─1 读取与校验：体积上限 → 扩展名白名单 → 真实魔数       [新增·安全]
+        ├─2 输入尺寸收敛：长边 > 1600px 时等比缩小               [新增·性能]
+        ├─3 precheck：叶片占比 ≥8% + 四边边缘带纯色判定
+        ├─4 detector：YOLO11n-cls @224 → Top3 + 1280-d 特征 OOD 打分
+        │       ood < 0.25            拒识（仍回传 top3 供人工参考）
+        │       0.25 ≤ ood < 0.32     通过但附「仅供参考」警告
+        │       ood ≥ 0.32            正常识别
+        ├─5 gradcam @640：Grad-CAM++（短边缩放+中心裁剪几何一致）[几何已修正]
+        │       × 叶片前景凸包掩膜 → 归零背景
+        │       × Otsu 自适应阈值 → 只涂真病灶
+        │       ＋ 色温异常通道（HSV Mahalanobis > 3σ，白色高光抑制）
+        └─6 prescriber：大模型优先，失败回落模板（来源如实标注） [新增·诚实性]</code></pre>
+<p>
+  说明：<code>detector</code> 推理与 <code>gradcam</code> 热力图由同一把 <code>_model_lock</code>
+  串行保护（热力图会临时切换共享模型的 <code>requires_grad</code> 并注册 hook，
+  属全局状态竞争）；大模型调用是纯网络 I/O，放在锁外，避免一次慢调用拖住所有推理。
+</p>
+
+<h3>2.2 目录职责（清理后）</h3>
+<pre><code>CNDS/
+├── backend/app/            推理服务（10 个 py）
+│   ├── main.py             入口：路由 / 校验 / 编排 / 推理锁 / 异常兜底
+│   ├── constants.py        ★新增 业务常量单点真相（作物清单 / OOD 阈值 / 上传边界 / 作品指纹）
+│   ├── model_arch.py       ★新增 模型结构内省（替代硬编码层索引）
+│   ├── imaging.py          ★新增 上传校验 / 尺寸收敛 / 严重度分级 / 上传回收
+│   ├── config.py           路径与配置（dotenv，无 import 副作用）
+│   ├── schemas.py          前后端契约
+│   ├── detector.py         YOLO 推理 + 中英映射 + OOD 打分
+│   ├── precheck.py         拍摄形式校验 + 叶片前景掩膜
+│   ├── gradcam.py          Grad-CAM++ + 色温异常通道
+│   └── prescriber.py       大模型 / 模板处方
+├── frontend/               原生 HTML/CSS/JS（无构建）+ 品牌 SVG
+├── models/                 best.pt（生产权重 3.28MB）
+├── runs/agriguard_v2/      训练证据（结果 csv / 曲线 / 混淆矩阵 / 参数）★ 参赛举证
+├── data/plantvillage/      训练集 60,343 张 / 38 类（保留；其余冗余目录已清理）
+├── scripts/                训练、数据整理、验证脚本
+├── docs/                   结构概览 + 本报告
+├── .workbuddy/memory/      4 篇开发日志 ★ 原创性举证
+├── .workbuddy/review/      6 份详细审查报告 ★ 证据附录
+└── .workbuddy/backup/      清理前备份（不进版本控制）</code></pre>
+
+<!-- ============================================================ -->
+<h2>三、审查结论总览</h2>
+
+<table>
+  <thead><tr><th>维度</th><th>评级</th><th>主要依据</th></tr></thead>
+  <tbody>
+    <tr><td>功能可用性</td><td><span class="tag t-done">好</span></td><td>端到端链路可复现：上传 → 识别 → 定位 → 处方，回归 5/5 通过</td></tr>
+    <tr><td>算法设计</td><td><span class="tag t-done">好</span></td><td>四层防线各有实测依据与调参记录，竞品未见同类设计</td></tr>
+    <tr><td>文档沉淀</td><td><span class="tag t-done">好</span></td><td>开发交接文档 + 4 篇工作日志，踩坑记录完整（原创性举证的核心资产）</td></tr>
+    <tr><td>安全</td><td><span class="tag t-p0">差 → 已修</span></td><td>原存在存储型 XSS（已实测复现）、CORS 全开、无上传边界、上传永不清理</td></tr>
+    <tr><td>并发正确性</td><td><span class="tag t-p0">差 → 已修</span></td><td>原 <code>async def</code> 内全程同步阻塞堵死事件循环；单例共享可变状态竞态</td></tr>
+    <tr><td>依赖可复现</td><td><span class="tag t-p1">差 → 已修</span></td><td>原 <code>ultralytics&gt;=8.2</code> 未锁定（已知 8.4.153 会崩）、缺 torch、setup 与实测 CUDA 不符</td></tr>
+    <tr><td>版本控制</td><td><span class="tag t-p1">无 → 已建</span></td><td>原无 <code>.git</code>；现已初始化并提交基线 <code>d5b8053</code></td></tr>
+    <tr><td>测试体系</td><td><span class="tag t-p1">弱 → 改善</span></td><td>无 pytest、无 CI；唯一回归脚本自重训后一直 4/5，已按 v2 权重重标定恢复 5/5</td></tr>
+    <tr><td>仓库卫生</td><td><span class="tag t-p1">差 → 已清</span></td><td>原 12.5 GB 中约 7.0 GB 为冗余；根目录混杂废弃产物</td></tr>
+    <tr><td>双盲合规</td><td><span class="tag t-p1">有风险 → 已脱敏</span></td><td>原 8 处真实用户名与本地路径；已清理</td></tr>
+  </tbody>
+</table>
+
+<!-- ============================================================ -->
+<h2>四、缺陷清单与修复状态</h2>
+
+<h3>4.1 正确性缺陷（P0）</h3>
+
+<table>
+  <thead><tr><th style="width:26%">缺陷</th><th style="width:38%">证据与后果</th><th>处理</th></tr></thead>
+  <tbody>
+    <tr>
+      <td>兜底模型类型错误</td>
+      <td><code>config.py</code> 的 <code>FALLBACK_MODEL="yolo11n.pt"</code> 是<b>检测</b>模型，
+          而 <code>detector.load()</code> 无条件访问分类头独有的 <code>.conv</code>。
+          实测对照：分类权重末层为 <code>Classify</code> 且 <code>hasattr(.conv)=True</code>；
+          检测权重末层为 <code>Detect</code>、<code>hasattr(.conv)=False</code>，
+          复现出 <code>AttributeError: 'Detect' object has no attribute 'conv'</code>。
+          后果：<code>models/best.pt</code> 缺失时<b>首个请求即崩</b>，且故障恰好推迟到演示现场。</td>
+      <td><span class="tag t-done">已修</span> 改指向同目录的分类兜底权重 <code>yolo11n-cls.pt</code>，
+          并加结构断言与明确报错</td>
+    </tr>
+    <tr>
+      <td>事件循环被阻塞</td>
+      <td><code>main.py</code> 的 <code>async def predict</code> 函数体内全程同步阻塞
+          （落盘、OpenCV、YOLO 推理、<code>requests</code> 调大模型）。
+          后果：单次请求进行中，<code>/health</code> 与静态文件全部无响应，
+          大模型最坏超时 30 秒内整个服务假死。</td>
+      <td><span class="tag t-done">已修</span> 改为 <code>def</code> 交由线程池；
+          推理临界区加锁；大模型调用置于锁外</td>
+    </tr>
+    <tr>
+      <td>共享可变状态竞态</td>
+      <td><code>detector._penultimate_features</code> 由 forward hook 写入实例属性，
+          而 <code>detector</code> 是模块级单例；<code>gradcam</code> 还会临时切换
+          <code>requires_grad</code>。原靠"事件循环被阻塞"意外串行化，一旦真并发即互相覆写。</td>
+      <td><span class="tag t-done">已修</span> 特征改为每次调用注册局部 hook、用完即移除</td>
+    </tr>
+    <tr>
+      <td>热力图定位几何不一致</td>
+      <td>识别路径走 ultralytics 的「短边缩放 + 中心裁剪」，可视化路径走「直接拉伸整图」
+          再把 CAM 拉回整图。两条路径<b>看到的内容范围不同</b>，非方形图上病灶位置会画错。
+          项目自带示例图恰好是 256×256 正方形，两条路径等价，所以一直未暴露。</td>
+      <td><span class="tag t-done">已修</span> 可视化改为同几何，CAM 映射回中心方形区域</td>
+    </tr>
+    <tr>
+      <td>预热失败阻断启动</td>
+      <td>启动钩子中的模型预热会清理一个临时文件；该清理一旦抛出异常
+          （实测在某些环境下抛基类异常，<code>except OSError</code> 抓不住），
+          直接导致 <code>Application startup failed. Exiting.</code> —— 服务完全起不来。
+          纯辅助动作不应具备拖垮启动的能力。</td>
+      <td><span class="tag t-done">已修</span> 预热全链路改为不可阻断启动</td>
+    </tr>
+    <tr>
+      <td>上传目录缺失即无法启动</td>
+      <td><code>StaticFiles</code> 在 import 期挂载时即检查目录存在性，
+          而建目录动作在 startup 钩子里（更晚）。后果：<code>uploads/</code> 一旦缺失
+          （被清理、或全新克隆的仓库里没有该目录），服务连启动都做不到。</td>
+      <td><span class="tag t-done">已修</span> 建目录提前到挂载之前</td>
+    </tr>
+    <tr>
+      <td>冒烟测试必然崩溃</td>
+      <td><code>scripts/smoke_test.py</code> 直接对 <code>detect()</code> 的返回值做迭代，
+          但该函数返回四元组 <code>(detections, ood, is_ood, is_warning)</code>，
+          迭代后取 <code>d.name</code> 必然抛 <code>AttributeError</code>。该脚本一直是坏的。</td>
+      <td><span class="tag t-done">已修</span> 正确解包，并补模型信息与来源输出</td>
+    </tr>
+  </tbody>
+</table>
+
+<h3>4.2 诚实性与契约缺陷（P0）</h3>
+<table>
+  <thead><tr><th style="width:26%">缺陷</th><th style="width:38%">证据与后果</th><th>处理</th></tr></thead>
+  <tbody>
+    <tr>
+      <td>处方来源不透明</td>
+      <td>原实现在无密钥或调用失败时<b>静默</b>回落模板，外部无法分辨。
+          而对外材料一直以「大模型个性化处方」为核心卖点——
+          评审若查证，即构成"声称大模型、实跑模板"的事实性风险。
+          iCAN 对本赛道材料不实是<b>直接取消资格</b>。</td>
+      <td><span class="tag t-done">已修</span> 响应体新增 <code>prescription_source</code>，
+          界面如实标注「内置模板兜底」</td>
+    </tr>
+    <tr>
+      <td>阈值双份真源</td>
+      <td>前端把「拒识阈值 0.25 / ≥0.32 为正常」<b>硬编码</b>在自己代码里，
+          与后端常量各自维护、无同步机制。而阈值历史上调整过两次
+          （0.40 → 0.35/0.40 → 0.25/0.32），且这段文案显示在结果区正文里，
+          一旦漂移就是答辩现场「文案说的数和实际判的数对不上」。</td>
+      <td><span class="tag t-done">已修</span> 新增 <code>GET /api/v1/meta</code> 与响应体回传，
+          前端只读不写</td>
+    </tr>
+    <tr>
+      <td>业务常量三处重复</td>
+      <td>支持作物清单同时存在于 <code>detector.py</code>（英文表）、
+          <code>main.py</code>（拒识提示的硬编码中文长串）、
+          <code>frontend/index.html</code>（中文列表）。</td>
+      <td><span class="tag t-done">已修</span> 收敛到 <code>constants.py</code> 单点真相</td>
+    </tr>
+  </tbody>
+</table>
+
+<h3>4.3 静默失败（P1）</h3>
+<ul>
+  <li><code>gradcam.py</code> 的 <code>except Exception: return None</code> 无任何日志 →
+      系统性失败（层不匹配、显存不足）在演示中表现为「功能悄悄没了」却无从定位。<b>已补日志</b>。</li>
+  <li><code>prescriber.py</code> 的 <code>except Exception</code> 掩盖配置缺失，
+      使系统"看起来有大模型处方"实际是模板（即上面 4.2 第一条的技术成因）。<b>已补日志并区分预期异常</b>。</li>
+  <li><code>gradcam.py</code> 中有一处「先算 Otsu 得到着色掩膜、随后立即被覆盖」的<b>无效计算</b>，
+      属死代码，已移除。</li>
+</ul>
+
+<h3>4.4 编码质量缺陷（P1/P2）</h3>
+<table>
+  <thead><tr><th>问题</th><th>证据</th><th>处理</th></tr></thead>
+  <tbody>
+    <tr>
+      <td>硬编码层索引</td>
+      <td><code>gradcam.py</code> 用 <code>_TARGET_LAYER=9</code> / <code>_HEAD_LAYER=10</code>，
+          <code>detector.py</code> 用 <code>list(children())[-1]</code> ——
+          同一 backbone 两套不一致的寻址约定。换模型或升级 ultralytics 会<b>静默指向错误的层</b>：
+          不报错，但热力图语义全错。</td>
+      <td><span class="tag t-done">已修</span> 新增 <code>model_arch.resolve_backbone()</code> 按类型内省，
+          两侧统一调用</td>
+    </tr>
+    <tr>
+      <td>前端内存泄漏</td>
+      <td><code>app.js</code> 每次上传都 <code>createObjectURL</code>，
+          全仓无 <code>revokeObjectURL</code>。连续换图会累积 blob，
+          低配演示机可能触发 GC 抖动。</td>
+      <td><span class="tag t-done">已修</span> 持有引用并在赋值前释放</td>
+    </tr>
+    <tr>
+      <td>无加载态 / 无并发守卫</td>
+      <td>原先加载态只有一行纯文本，<code>fetch</code> 无取消、无请求序号。
+          演示时连点两次会产生两个并发请求，陈旧响应可能覆盖新结果
+          （而当时后端还是同步阻塞的）。</td>
+      <td><span class="tag t-done">已修</span> <code>AbortController</code> + 请求序号 +
+          spinner + 超时文案 + 重试按钮</td>
+    </tr>
+    <tr>
+      <td>硬编码颜色</td>
+      <td><code>styles.css</code> 12 处、<code>app.js</code> 9 处非例外色值。</td>
+      <td><span class="tag t-done">已修</span> 全量收敛为语义 token</td>
+    </tr>
+    <tr>
+      <td>emoji 作功能图标</td>
+      <td>欢迎弹窗用 emoji 作徽标，而项目<b>已有品牌 SVG 资源却零引用</b>；
+          上传按钮用纯文本 <code>+</code> 作图，三端字体渲染不一致。</td>
+      <td><span class="tag t-done">已修</span> 改用 <code>logo_icon.svg</code> 与描边 SVG 图标</td>
+    </tr>
+    <tr>
+      <td>上传参数无意义</td>
+      <td><code>model.predict(..., conf=0.25)</code> 对分类任务无过滤作用
+          （分类头始终输出全部类别概率），且恰等于库默认值，属冗余误导。</td>
+      <td><span class="tag t-done">已移除</span> 行为完全一致</td>
+    </tr>
+    <tr>
+      <td>render 状态清理不对称</td>
+      <td>成功分支迟到清理处方区；<code>detections.forEach</code> 无兜底，
+          依赖 schema 默认值这一隐式契约，后端一旦改为 <code>Optional</code> 即白屏。</td>
+      <td><span class="tag t-done">已修</span> 统一重置 + <code>Array.isArray</code> 兜底</td>
+    </tr>
+  </tbody>
+</table>
+
+<h4>已复核确认「不是问题」的疑点（避免误改引入回归）</h4>
+<table>
+  <thead><tr><th>疑点</th><th>复核结论</th></tr></thead>
+  <tbody>
+    <tr><td>可视化未做 ImageNet 归一化</td>
+        <td><b>不需要</b>。该模型内置 <code>Normalize(mean=0,std=1)</code>，其 scale=1/255 与手工预处理一致。</td></tr>
+    <tr><td>分类任务传 <code>conf=0.25</code> 有害</td>
+        <td><b>无实际影响</b>。分类头输出全部类别概率、不做 conf 过滤，且该值与库默认值相同。</td></tr>
+    <tr><td><code>top5</code> 长度可能不足 3</td>
+        <td><b>不成立</b>。实测 <code>len(top5)==5</code>，取 Top3 正确。</td></tr>
+    <tr><td>手机照片 EXIF 旋转导致识别错误</td>
+        <td><b>不成立</b>。<code>cv2.imread</code> 不应用 EXIF 方向，推理与热力图共用同一未旋转原图，几何自洽。</td></tr>
+    <tr><td>前端 XSS 注入面</td>
+        <td><b>改造前已闭合</b>：所有用户可见插值点要么经转义、要么用 <code>textContent</code>。
+            本次进一步改为 <code>createElement</code> 组装，消除字符串拼 HTML 的未来风险。</td></tr>
+  </tbody>
+</table>
+
+<!-- ============================================================ -->
+<h2>五、安全隐患排查与封堵</h2>
+
+<table>
+  <thead><tr><th style="width:24%">隐患</th><th style="width:44%">证据与影响</th><th>处理</th></tr></thead>
+  <tbody>
+    <tr>
+      <td><span class="tag t-p0">P0</span> 存储型 XSS</td>
+      <td>用户可控后缀直接拼进落盘文件名，<code>/uploads</code> 静态挂载。
+          <b>已实测复现</b>：上传 <code>poc.html</code> 后
+          <code>GET /uploads/&lt;uuid&gt;.html</code> 返回 200 + text/html，浏览器按页面执行。</td>
+      <td><span class="tag t-done">已封堵</span> 魔数校验（拦住改扩展名绕过）</td>
+    </tr>
+    <tr>
+      <td><span class="tag t-p0">P0</span> 无上传边界</td>
+      <td>无体积上限、无类型白名单。超大图会让推理显著退化（实测 12MP 照片的
+          热力图耗时是示例图的十余倍），并抬升内存占用。</td>
+      <td><span class="tag t-done">已封堵</span> 12MB 上限 + 白名单 +
+          长边收敛到 1600px</td>
+    </tr>
+    <tr>
+      <td><span class="tag t-p1">P1</span> 上传永不清理</td>
+      <td>实测 259 个文件 / 11.5MB 只增不删。用户上传的作物照片属用户数据，
+          长期留存在本地既无必要也不妥当。</td>
+      <td><span class="tag t-done">已封堵</span> 惰性回收（保留 24 小时，带超频保护）</td>
+    </tr>
+    <tr>
+      <td><span class="tag t-p1">P1</span> CORS 全开</td>
+      <td><code>allow_origins=["*"]</code> + <code>allow_methods=["*"]</code> +
+          <code>allow_headers=["*"]</code>，等价于允许任意站点从浏览器读取本机推理服务结果。</td>
+      <td><span class="tag t-done">已收敛</span> 仅保留本机演示所需来源</td>
+    </tr>
+    <tr>
+      <td><span class="tag t-p1">P1</span> 进度面板暴露密钥</td>
+      <td><code>serve_panel.bat</code> 用 <code>http.server</code> 托管<b>整个项目根目录</b>，
+          会把 <code>.env</code> 暴露为可 HTTP 读取；且该面板功能早已废弃
+          （训练结束，其数据源为空数组）。
+          <b>注意</b>：一旦按建议配置了真实 <code>.env</code>，此风险即被激活。</td>
+      <td><span class="tag t-done">已删除</span> 该脚本与面板相关文件（已备份）</td>
+    </tr>
+    <tr>
+      <td><span class="tag t-p1">P1</span> 演示环境联网不可控</td>
+      <td>ultralytics 在找不到权重、做 AMP 检查或遥测时会尝试联网；
+          而比赛现场网络不可控。原先兜底权重名还会触发从 GitHub 下载。</td>
+      <td><span class="tag t-done">已封堵</span> 离线优先环境变量 + 模型一律本地加载</td>
+    </tr>
+    <tr>
+      <td><span class="tag t-p1">P1</span> 占位符密钥导致长超时</td>
+      <td>若把 <code>.env.example</code> 误复制为 <code>.env</code>，
+          程序会认为"已配置密钥"而真的发起请求，每次等满 30 秒超时——
+          现场演示的致命事故。</td>
+      <td><span class="tag t-done">已封堵</span> 占位符与过短密钥识别为未配置；
+          超时拆分为连接 3.5s / 读取 12s</td>
+    </tr>
+    <tr>
+      <td><span class="tag t-p2">P2</span> 无鉴权 / 无限流</td>
+      <td><code>/predict</code> 无任何访问控制。<b>本机演示形态下风险可接受</b>
+          （绑定 127.0.0.1）；但若改为公网可访问，必须先做鉴权与限流。</td>
+      <td><span class="tag t-open">待定</span> 取决于最终演示形态（见第九节）</td>
+    </tr>
+  </tbody>
+</table>
+
+<h3>5.1 双盲合规（iCAN 红线：每处违规扣 5 分）</h3>
+<p>
+  扫描范围覆盖全部对外材料与代码文本。结论：<b>未发现院校名称、参赛单位名称、指导老师姓名</b>；
+  但发现 <b>8 处真实个人身份信息泄露</b>——Windows 用户名（真实姓名拼音）与本地路径，
+  可被反查身份。这些出现在开发交接文档、工作日志与训练参数文件中，
+  而这三类文件恰恰是<b>「开发过程可追溯」举证时最容易被一并带出</b>的材料。
+</p>
+<table>
+  <thead><tr><th>位置</th><th>泄露内容类型</th><th>处理</th></tr></thead>
+  <tbody>
+    <tr><td>开发交接文档（3 处）</td><td>用户名 + 桌面路径</td><td><span class="tag t-done">已脱敏</span></td></tr>
+    <tr><td>工作日志 2026-09-16（4 处）</td><td>同上</td><td><span class="tag t-done">已脱敏</span></td></tr>
+    <tr><td><code>runs/agriguard_v2/args.yaml</code>（4 处）</td><td>训练参数中的绝对路径</td><td><span class="tag t-done">已脱敏</span></td></tr>
+    <tr><td>旧版审查报告（1 处）</td><td>路径</td><td><span class="tag t-done">已删除</span> 已备份</td></tr>
+  </tbody>
+</table>
+<blockquote class="warn">
+  <p><b>导出后必做：二次扫描。</b>任何对外材料（PPT / 视频 / 海报 / 文档）导出后，
+  都要重新用关键词扫描一遍导出物。<b>PPT 备注页、视频字幕、海报小字是高频遗漏区。</b></p>
+</blockquote>
+<p>
+  另有一条潜在身份暗示已处理：原欢迎弹窗的文案「致力于方便每一位<b>农林人</b>」
+  可能被联想为农林类院校，已改为中性表述「每一位种植者」。
+</p>
+
+<!-- ============================================================ -->
+<h2>六、依赖与配置项检查</h2>
+
+<h3>6.1 版本实况（实测，非文档口径）</h3>
+<p>交接文档与实际环境已发生漂移，以下为实测值：</p>
+<table>
+  <thead><tr><th>组件</th><th>文档口径</th><th>实测</th><th>结论</th></tr></thead>
+  <tbody>
+    <tr><td>Python</td><td class="num">3.12</td><td class="num">3.13.14</td><td>漂移</td></tr>
+    <tr><td>torch</td><td class="num">2.5.1+cu121</td><td class="num">2.13.0+cu126</td><td>漂移</td></tr>
+    <tr><td>torchvision</td><td class="num">0.20.1+cu121</td><td class="num">0.28.0+cu126</td><td>漂移</td></tr>
+    <tr><td>ultralytics</td><td class="num">&gt;=8.2（未锁）</td><td class="num">8.4.137</td><td><b>关键：必须锁定</b></td></tr>
+    <tr><td>numpy</td><td class="num">&gt;=1.24</td><td class="num">2.5.3</td><td>大版本跨度，已验证</td></tr>
+    <tr><td>opencv-python</td><td class="num">&gt;=4.9</td><td class="num">5.0.0.93</td><td>大版本跨度，已验证</td></tr>
+    <tr><td>fastapi / pydantic</td><td class="num">&gt;=0.110 / &gt;=2.6</td><td class="num">0.141.1 / 2.13.5</td><td>正常</td></tr>
+  </tbody>
+</table>
+
+<h3>6.2 三处会直接导致失败的问题</h3>
+<ol>
+  <li>
+    <b>ultralytics 未锁版本（最高风险）。</b>原写 <code>ultralytics&gt;=8.2</code>，
+    而项目日志明确记录 <b>8.4.153 的 <code>predict</code> 会对模型做 <code>deepcopy</code>，
+    与 forward hook 冲突</b>，报 <code>cannot pickle '_thread.lock' object</code> 导致推理完全不可用。
+    这意味着<b>任何一次 <code>setup.bat</code> 都可能装上一个会崩的版本</b>。
+    已锁定为实测验证过的 <code>8.4.137</code>，并附原因注释。
+  </li>
+  <li>
+    <b><code>requirements.txt</code> 缺 torch/torchvision。</b>
+    单独执行 <code>pip install -r requirements.txt</code> 会装出一个没有 torch 的环境；
+    而直接让 pip 通过 ultralytics 传递依赖安装，会装成 CPU 版，GPU 推理失效。
+    已明确「必须先装 PyTorch、再装其余依赖」的顺序，并在 <code>setup.bat</code> 中固化。
+  </li>
+  <li>
+    <b><code>setup.bat</code> 与实际 CUDA 不符。</b>原脚本装 cu121，而实际环境为 cu126。
+    已对齐并改为「CUDA 12.6 / CPU」二选一，且安装后自动跑一次导入自检。
+  </li>
+</ol>
+
+<h3>6.3 已落地的配置改进</h3>
+<ul>
+  <li><b>.env 解析</b>：由手写解析（不处理引号 / <code>export</code> 前缀 / 行尾注释 / BOM）
+      改用已安装却未被使用的 <code>python-dotenv</code>。</li>
+  <li><b>消除 import 副作用</b>：原 <code>config.py</code> 在 import 时即创建三个目录
+      （含体积很大的 <code>data/</code>），使任何 <code>import app.config</code> 都产生磁盘副作用，
+      测试与工具链无法干净隔离。已改为显式调用。</li>
+  <li><b>依赖分层</b>：新增 <code>requirements-train.txt</code>，
+      把绘图与大数据处理库从推理运行时中分离，部署镜像可更精简。</li>
+  <li><b>启动脚本加固</b>：<code>run.bat</code> 增加虚拟环境 / 模型权重 / 端口占用三项前置检查，
+      缺失兜底权重时明确警告「识别结果无实际意义，请勿用于演示」；不写字节码；离线环境变量。</li>
+  <li><b>.gitignore 重设计</b>：原设计直接忽略 <code>runs/</code>，但该目录下的
+      训练结果 csv、混淆矩阵与训练曲线是<b>原创性举证的硬证据</b>。
+      已改为「忽略中间图像与权重复本，保留训练记录」，实现
+      「代码进版本控制、大体积数据不进、<b>但参赛证据必须进</b>」。</li>
+</ul>
+
+<!-- ============================================================ -->
+<h2>七、回归测试的沉默失败（重要）</h2>
+
+<p>
+  项目唯一的端到端回归脚本 <code>scripts/verify_pipeline.py</code>，
+  在审查时实测为 <b>4/5 失败</b>。这不只是"少通过一项"，而是暴露了一个更深的问题：
+</p>
+<div class="card">
+  <h4>失效链条</h4>
+  <ol>
+    <li>脚本用「纯白底 + 绿色椭圆」合成图作为<b>拒识区</b>夹具，期望其 OOD 分数约 0.24（&lt; 0.25）。</li>
+    <li>该期望值是 <b>2026-09-01 按首轮模型</b>实测标定的。</li>
+    <li>2026-09-15 用 60,343 张数据<b>重训了 v2 模型</b>，特征空间改变，整条 OOD 分布下移约 0.05–0.06。</li>
+    <li>同一张合成图在 v2 下变为约 0.30，落进<b>警告区</b>，于是断言失败。</li>
+    <li>但<b>脚本自重训后从未重跑</b>，因此这个失败一直被隐藏。</li>
+  </ol>
+  <p><b>连带影响：</b>开发文档与代码注释中记录的整套 OOD 标定值
+  （合规图 0.43 / 枫叶 0.33 / 合成椭圆 0.26 / 葡萄叶 0.19）<b>全部来自重训前的模型</b>，
+  已不可直接引用。</p>
+</div>
+
+<h3>7.1 按 v2 权重复测的真实标定值</h3>
+<table>
+  <thead><tr><th>输入</th><th>OOD 分数</th><th>落入区间</th></tr></thead>
+  <tbody>
+    <tr><td>自带合规示例图（真实番茄叶）</td><td class="num">0.3691</td><td>正常</td></tr>
+    <tr><td>验证集同分布抽样（380 张，均值）</td><td class="num">0.51</td><td>正常（378/380 ≥ 0.32）</td></tr>
+    <tr><td>合成白底绿椭圆</td><td class="num">≈0.303</td><td>警告</td></tr>
+    <tr><td>合成灰底绿椭圆</td><td class="num">≈0.273</td><td>警告</td></tr>
+    <tr><td>合成黑底绿椭圆</td><td class="num">≈0.222</td><td><b>拒识</b></td></tr>
+    <tr><td>过小图形 / 随机噪点 / 纯灰块</td><td class="num">—</td><td>被前置校验拒绝（不进入 OOD）</td></tr>
+  </tbody>
+</table>
+
+<h3>7.2 两个必须知道的操作结论</h3>
+<blockquote class="warn">
+  <p><b>结论一 · 阈值本身经复核仍然合理，无需调整。</b>
+  合规真实图 0.37 与验证集同分布图（均值 0.51）都稳在正常区，
+  未见误杀受支持作物；阈值下调的唯一目的是放过真实叶片，与夹具问题无关。</p>
+</blockquote>
+<blockquote class="danger">
+  <p><b>结论二 · 合成图形已无法触发拒识区，答辩演示「拒识」必须用真实照片。</b>
+  合成绿色图块在 v2 模型下最多落到警告区（因为"绿色 + 均匀形状"正是健康叶类权重的高相似方向）。
+  真正能触发拒识的是<b>真实的、非受支持作物的叶片照片</b>。
+  如果现场用合成图演示拒识，<b>这个环节会演不出来</b>。</p>
+</blockquote>
+
+<p>已完成的处理：脚本夹具按 v2 实测重标定（改用<b>背景色</b>作为可控旋钮：
+黑底进拒识区、灰底进警告区），并改为<b>从响应体读取阈值</b>而非硬编码，
+消除与 <code>constants.py</code> 的双份真源；<code>constants.py</code> 的标定注释同步更新为
+v2 实测值，并写入「重训后必须重新标定」的维护纪律。回归已恢复 <b>5/5，退出码 0</b>。</p>
+
+<!-- ============================================================ -->
+<h2>八、重构与优化建议</h2>
+
+<h3>8.1 已完成</h3>
+<table>
+  <thead><tr><th>项</th><th>内容</th></tr></thead>
+  <tbody>
+    <tr><td>常量收敛</td><td>新增 <code>constants.py</code> 作为单点真相：作物清单、OOD 双阈值、上传边界、作品指纹</td></tr>
+    <tr><td>结构内省</td><td>新增 <code>model_arch.py</code> 取代硬编码层索引，统一两套寻址约定，结构不符时快速报错</td></tr>
+    <tr><td>输入处理收口</td><td>新增 <code>imaging.py</code>：上传校验 / 尺寸收敛 / 严重度分级 / 上传回收</td></tr>
+    <tr><td>契约版本化</td><td>新增 <code>/api/v1/predict</code> 与 <code>/api/v1/meta</code>，旧 <code>/predict</code> 保留为兼容别名</td></tr>
+    <tr><td>异常兜底</td><td>统一异常处理器，失败也返回与正常响应同构的 JSON，前端不再因纯文本 500 而解析失败</td></tr>
+    <tr><td>可观测性</td><td>补齐结构化日志；响应体新增耗时、模型名、权重大小、推理设备</td></tr>
+    <tr><td>可解释性量化</td><td>热力图输出 <code>lesion_ratio</code>（病灶面积占比）与严重度分级，
+        使「识别 → 定位 → 量化 → 分级处方」形成完整循证链</td></tr>
+  </tbody>
+</table>
+
+<h3>8.2 建议但未做（按 ROI 排序，供后续排期）</h3>
+<table>
+  <thead><tr><th>优先级</th><th>项</th><th>理由与风险</th></tr></thead>
+  <tbody>
+    <tr>
+      <td><span class="tag t-p1">高</span></td>
+      <td>业务逻辑下沉为 <code>services/diagnosis.py</code></td>
+      <td>把编排从路由中抽出，使业务可被脚本与测试直接调用，而不必走 HTTP。
+          当前 <code>main.py</code> 已较长，接近单文件上限，继续膨胀会降低可维护性。</td>
+    </tr>
+    <tr>
+      <td><span class="tag t-p1">高</span></td>
+      <td>引入 pytest 与最小 CI</td>
+      <td>现有验证靠人肉跑脚本，这正是本次「回归测试沉默失败」得以长期隐藏的根本原因。
+          哪怕只把 <code>verify_pipeline.py</code> 包成 pytest 用例并在提交时自动跑，也能防止复发。</td>
+    </tr>
+    <tr>
+      <td><span class="tag t-p1">高</span></td>
+      <td>OOD 阈值用真实照片重新标定</td>
+      <td>当前阈值在两个模型版本间沿用。建议采集若干真实非支持作物叶片照片
+          （枫叶、葡萄叶、田间实景）实测落点，确认拒识区在真实输入上仍有效——
+          这是核心差异化能力，值得专门验证。</td>
+    </tr>
+    <tr>
+      <td><span class="tag t-p2">中</span></td>
+      <td>热力图色带色盲友好化</td>
+      <td>现用 JET 彩虹色带，红绿色盲用户难以分辨。可改为单向渐进色带
+          （青 → 琥珀 → 红），保持"冷→暖"语义不变。前端已加图例与文字说明做了部分缓解。</td>
+    </tr>
+    <tr>
+      <td><span class="tag t-p2">中</span></td>
+      <td>接入真实田间数据做域适应</td>
+      <td>当前训练与测试数据全部为实验室摆拍，「单叶 + 纯色背景」是主动划定的可信边界。
+          这是产品最大的实用性边界，需田间数据才能根治。</td>
+    </tr>
+    <tr>
+      <td><span class="tag t-p2">低</span></td>
+      <td>可视化与识别共用同一预处理管线</td>
+      <td>本次已通过"同几何"修正两者一致性，但仍是两处独立实现。
+          进一步可抽出统一的 <code>preprocess()</code>，从结构上保证不再分叉。</td>
+    </tr>
+  </tbody>
+</table>
+
+<!-- ============================================================ -->
+<h2>九、面向国奖的技术与答辩策略</h2>
+
+<h3>9.1 官方评分权重（决策依据）</h3>
+<p>已从大赛官方渠道核实：<b>项目总分 = 巡展评分 × 20% + 分组答辩评分 × 80%</b>。</p>
+<table>
+  <thead><tr><th>环节</th><th>维度</th><th>分值</th><th>对应本项目的发力点</th></tr></thead>
+  <tbody>
+    <tr><td rowspan="4">分组答辩<br>（80%）</td><td>创新性</td><td class="num">35</td>
+        <td>「负责任的 AI」：主动拒识 + 可解释定位，解决图像 AI 落地的共性难题</td></tr>
+    <tr><td>实用性</td><td class="num">25</td>
+        <td>单模型零前置知识、3.28MB 轻量本地推理、处方可落地</td></tr>
+    <tr><td>原创性</td><td class="num">20</td>
+        <td><b>开发过程可追溯</b>：4 篇工作日志 + 训练证据 + 迭代对比 + 本次新增的原创水印</td></tr>
+    <tr><td>技术方案</td><td class="num">20</td>
+        <td>四层防线的设计取舍与实测标定依据</td></tr>
+    <tr><td rowspan="3">巡展<br>（20%）</td><td>现场演示效果</td><td class="num">50</td>
+        <td><b>单项最高权重</b>：演示必须零故障、零等待</td></tr>
+    <tr><td>作品实用性</td><td class="num">25</td><td>功能完整闭环</td></tr>
+    <tr><td>技术创新性</td><td class="num">25</td><td>同上</td></tr>
+  </tbody>
+</table>
+<p>官方同时明确：专利 / 合同 / 论文<b>不作为</b>本赛道评审依据，推荐「重点聚焦产品实物本身与开发过程」；
+文件伪造 / 抄袭 / 盗用 / 代做<b>直接取消资格</b>；材料违反盲审原则<b>每处扣 5 分</b>。</p>
+
+<h3>9.2 竞品对标（同赛道对手）</h3>
+<table>
+  <thead><tr><th>维度</th><th>禾目</th><th>对手</th><th>判定</th></tr></thead>
+  <tbody>
+    <tr><td>架构</td><td>单体 FastAPI + 静态前端</td><td>Vue + SpringBoot + Flask + MySQL 三层分离</td><td>落后（工程完整度）</td></tr>
+    <tr><td>模型路线</td><td>分类，<b>1 个模型覆盖 38 类</b></td><td>检测，<b>按作物拆 9 个模型</b></td><td>各有所长</td></tr>
+    <tr><td>作物覆盖</td><td>14 种欧美常见作物，<b>缺水稻 / 小麦 / 棉花</b></td><td>含中国主粮</td><td>明显落后</td></tr>
+    <tr><td>病虫害类型</td><td>仅病害</td><td>病害 + 虫害双覆盖</td><td>落后</td></tr>
+    <tr><td>可解释性</td><td><b>Grad-CAM++ 病灶热力图 + 色温异常通道</b></td><td>仅检测框</td><td><b>领先</b></td></tr>
+    <tr><td>拒识能力</td><td><b>前置校验 + OOD 分布外拒识</b></td><td>未见对"模型不认识"的处理</td><td><b>领先</b></td></tr>
+    <tr><td>用户门槛</td><td><b>单模型自动判作物 + 病害，零前置知识</b></td><td>用户须先自行判断作物以选对模型</td><td><b>领先</b></td></tr>
+    <tr><td>成本与部署</td><td><b>权重 3.28MB，普通电脑可跑</b></td><td>9 个模型 + 四层服务 + 数据库</td><td><b>领先</b></td></tr>
+    <tr><td>数据治理</td><td>拍摄形式前置拦截，立意明确</td><td>未见拍摄质量治理</td><td>领先（立意）</td></tr>
+  </tbody>
+</table>
+
+<p><b>差异化定位一句话：</b></p>
+<blockquote>
+  <p>禾目不追求"认得最多"，而追求<b>「认得准、认得清、不假装认得」</b>——
+  单模型 3.28MB 覆盖 14 种作物，用<b>可解释定位 + 主动拒识</b>正面解决"AI 会不会乱说"的信任问题，
+  与按作物拆 9 个模型、只给检测框的对手形成「<b>覆盖广度 vs 诊断可信度</b>」的路线分野。</p>
+</blockquote>
+
+<h3>9.3 针对对手优势的三条反制要点</h3>
+<ol>
+  <li><b>「9 个模型」是把专家门槛转嫁给用户，不是更专业。</b>
+      按作物拆模型隐含一个前提：用户得先知道这是什么作物。可真实场景里，
+      农户拿到的就是一片病叶，他连病害都判不准，更判不准该选哪个模型——
+      <b>选错模型 = 诊断必错</b>。禾目单模型同时判作物与病害，用户零门槛。</li>
+  <li><b>覆盖广度是工程量，可解释与拒识是方法论。</b>
+      本赛道创新性 35 + 原创性 20 + 技术方案 20 = 75 分，考的是突破而非类目数量。
+      把作物从 14 种堆到 23 种是数据工程量的增加；
+      而「感知自己不知道」是所有图像 AI 落地的共性难题，更难、更本质、更可迁移——
+      做完主粮数据，这条技术栈能直接迁移过去；反之只堆模型不做拒识，
+      用户拿到的仍是一个会自信答错的系统。</li>
+  <li><b>现场可验证的对比动作。</b>
+      建议请对手演示一次"上传一张不在训练集里的图片"会发生什么——大概率给出高置信度的错误答案；
+      而禾目会明确拒识。农业诊断要对症下药，<b>错误诊断的代价是买错药、药害、农残</b>。
+      「宁可说不知道，也不乱开方」不是功能少，是职业底线，也正对应国家「化肥农药减量增效」的方向。</li>
+</ol>
+
+<h3>9.4 是否赛前补中国主粮：明确结论——不补</h3>
+<ol>
+  <li><b>时间与数据不可得。</b>区域赛窗口仅有约一个月。中国主粮的公开数据集多为
+      检测框标注而非分类标注，需重做清洗、类别归一化、中文映射、阈值重标定与全链路回归，
+      这是一个以周计的完整链路。</li>
+  <li><b>"做一半"的减分风险高于"不做"。</b>只加一两种且精度未标定，
+      会两头不讨好——既没覆盖全，又破坏了当前"14 类全覆盖、单模型自洽"的干净叙事。</li>
+  <li><b>正确解法是把它写成路线图，把短板转化为价值观。</b>
+      「我们宁愿只覆盖 14 种并保证可信，也不愿覆盖 23 种却让农民拿到错误处方。」
+      再给出可迁移的技术路线，短板就变成"有原则地先做可信、再做全面"。</li>
+</ol>
+
+<h3>9.5 答辩必备：诚实口径</h3>
+<blockquote class="danger">
+  <p><b>关于大模型处方。</b>当前 <code>.env</code> 未配置，处方走的是内置模板。
+  这是工程上的容错设计（有密钥走通义千问，无密钥走模板），
+  且界面已如实标注来源。<b>绝不能在演示时把模板处方说成大模型生成</b>——
+  这是被追问即穿帮的事实性风险。答辩前建议二选一：配好密钥让大模型真跑，
+  或在演示时明确说明"当前展示为模板兜底，接入大模型后为个性化处方"。</p>
+</blockquote>
+<blockquote class="warn">
+  <p><b>关于 99.7% 的准确率。</b>必须明确区分：这是<b>实验室分布</b>下的 top1 准确率。
+  自测显示田间实景的 OOD 分数仅 0.17–0.20，会被拒识。
+  正确表述是：「99.7% 说明模型在给定分布下确实学到了判别特征，
+  而 OOD 拒识保证这个数字不会被用在分布外样本上骗人」。</p>
+</blockquote>
+<blockquote class="warn">
+  <p><b>关于模型坍缩的复核。</b>开发日志曾记录早期模型出现"坍缩"
+  （32 张图中 68.8% 被判为同一类）。本次已用混淆矩阵复核：
+  <b>38×38 归一化混淆矩阵为一条干净的对角线</b>，各类可分，坍缩问题已解决。
+  这条"曾坍缩 → 定位为数据不平衡 → 重训 → 混淆矩阵逐类复核达标"的闭环，
+  比"一直很好"更有说服力，建议主动讲。</p>
+</blockquote>
+<blockquote class="warn">
+  <p><b>关于单叶 + 纯色背景。</b>这是当前的真实局限，应正面承认而非回避。
+  转化为技术亮点的逻辑是：所有图像分类模型的能力都由训练分布决定，这是共性而非本项目 bug；
+  禾目没有硬给一个错误答案，而是前置拦截 + 主动拒识——
+  「拍不对，我先拦下来，而不是给你一个假结果」。</p>
+</blockquote>
+
+<h3>9.6 现场演示防翻车清单</h3>
+<ul>
+  <li><b>拒识演示必须用真实非支持作物叶片照片</b>（合成图已无法触发拒识区，见第七节）。</li>
+  <li>模型已在启动期预热（实测冷启动约 5.9 秒），该延迟已挪到无人观察的启动阶段；
+      <b>但请提前 1 分钟启动服务</b>，不要当着评委的面打开。</li>
+  <li>确认 <code>models/best.pt</code> 存在。若缺失，服务会用兜底权重启动，
+      此时<b>识别结果无实际意义</b>（<code>run.bat</code> 会明确警告）。</li>
+  <li>录屏备份一份完整演示；准备纯 CPU 也能跑的兜底（模型仅 3.28MB）。</li>
+  <li>示例图按钮已提升为 44px 次级主按钮并置于首屏，演示路径为
+      「打开页面 → 点一次示例图 → 3 秒出结论」，请按此路径排练。</li>
+  <li>断网不影响：模型本地加载、已关闭联网行为；处方会自动回落模板并如实标注。</li>
+</ul>
+
+<h3>9.7 原创水印体系（服务于原创性 20 分，并可用于抄袭取证）</h3>
+<p>
+  已建立<b>五层水印</b>，每层独立可验证，交叉命中构成"同一作者、同一时间锚点"的强证明链：
+  <b>①</b> 源码头部注释 · <b>②</b> 页脚 DOM 结构化指纹 · <b>③</b> CSS 自定义属性 ·
+  <b>④</b> 控制台原创声明 · <b>⑤</b> 运行期自证接口。
+</p>
+<pre><code>// 发现疑似抄袭时的取证步骤
+__agri_guard__.verify()          // 返回「完整」，即证明为原样复制
+getComputedStyle(document.documentElement).getPropertyValue('--agri-signature')
+document.getElementById('agri-origin-fingerprint').dataset
+// 后端每次响应均带 X-AgriGuard-Signature 响应头</code></pre>
+<p>
+  全部水印<b>只使用作品标识、团队名、时间戳与指纹，不含任何院校名称、单位名称或个人信息</b>，
+  符合双盲要求。即便抄袭者删除其中一两层，其余层仍可独立举证；
+  若只改其中一层，自证接口会直接报「已被篡改」，反而成为更强的侵权证据。
+</p>
+
+<!-- ============================================================ -->
+<h2>十、工程清理明细</h2>
+
+<p><b>执行方式：</b>先整体备份，再删除；保留全部开发日志与训练证据。</p>
+<p><b>备份位置：</b><code>.workbuddy/backup/2026-09-20/</code>（已加入 .gitignore，不进版本控制）</p>
+
+<table>
+  <thead><tr><th>分组</th><th>内容</th><th>回收</th><th>依据</th></tr></thead>
+  <tbody>
+    <tr>
+      <td>A · 零风险残留</td>
+      <td>进度面板三件套（<code>进度面板.html</code> / <code>serve_panel.bat</code> / <code>status.json</code>）、
+          早期进度脚本 <code>download.js</code> / <code>progress.js</code>、
+          一次性分析产物 <code>uploads_analysis.json</code>、旧版审查报告、
+          旧权重 <code>best_old.pt</code>、<code>__pycache__</code></td>
+      <td class="num">约 3.4 MB</td>
+      <td>训练已结束面板废弃；且 serve_panel 托管项目根可读 .env</td>
+    </tr>
+    <tr>
+      <td>B · 数据冗余</td>
+      <td><code>data/downloads/</code>（3 个压缩包，<b>内容已全部解压到 data/plantvillage</b>）、
+          <code>data/plantvillage_combined/</code>、<code>data/plantvillage_balanced/</code>、
+          <code>data/datasets_raw/</code></td>
+      <td class="num"><b>约 7.0 GB</b></td>
+      <td>已核对 <code>data/plantvillage</code> 保留 38 类 / 60,343 张，重训仍可用；
+          原始压缩包可由脚本重新下载</td>
+    </tr>
+    <tr>
+      <td>C · 运行时残骸</td>
+      <td><code>uploads/</code> 全部上传与热力图历史文件</td>
+      <td class="num">约 11.5 MB</td>
+      <td>属用户数据，长期留存无必要；已有回收策略</td>
+    </tr>
+    <tr>
+      <td>D · 经判定不删</td>
+      <td><code>scripts/</code> 中的素材生产脚本（build_pptx / build_video2 / build_poster 等）</td>
+      <td class="num">0</td>
+      <td>其输入输出目录 <code>media/</code> 已丢失，但赛前可能需重建演示视频与海报，
+          <b>保留以备重用</b></td>
+    </tr>
+    <tr>
+      <td>E · 经判定不删</td>
+      <td><code>.venv/</code>（4.57 GB）</td>
+      <td class="num">0</td>
+      <td>演示依赖，删除后需重装约 10 分钟，赛前不值得冒险</td>
+    </tr>
+  </tbody>
+</table>
+
+<p><b>结果：</b>文件数 125,190 → 86,379；体积 12,530 MB → 5,490 MB；<b>释放约 7.0 GB</b>。
+根目录从混杂 30 项收敛为 19 项，无任何临时文件。</p>
+
+<!-- ============================================================ -->
+<h2>十一、遗留事项与下一步</h2>
+
+<table>
+  <thead><tr><th>优先级</th><th>事项</th><th>说明</th></tr></thead>
+  <tbody>
+    <tr>
+      <td><span class="tag t-p0">最高</span></td>
+      <td>决定大模型处方口径</td>
+      <td>二选一：配置真实密钥让大模型真跑，或在演示时明确说明走模板兜底。
+          <b>不可声称大模型已跑通。</b></td>
+    </tr>
+    <tr>
+      <td><span class="tag t-p0">最高</span></td>
+      <td>准备真实非支持作物叶片照片</td>
+      <td>用于现场演示「拒识」环节。合成图形已无法触发拒识区。</td>
+    </tr>
+    <tr>
+      <td><span class="tag t-p1">高</span></td>
+      <td>OOD 阈值用真实照片重新标定</td>
+      <td>当前阈值跨两个模型版本沿用，建议实测确认真实输入下拒识区仍有效。</td>
+    </tr>
+    <tr>
+      <td><span class="tag t-p1">高</span></td>
+      <td>配置远端仓库</td>
+      <td>本地仓库已建立。远端建议使用国内可达平台（GitHub 在当前网络环境下不稳定）。</td>
+    </tr>
+    <tr>
+      <td><span class="tag t-p1">高</span></td>
+      <td>重建演示物料</td>
+      <td>原演示视频与海报已丢失，赛前需重新录制/制作（素材生成脚本已保留）。</td>
+    </tr>
+    <tr>
+      <td><span class="tag t-p1">高</span></td>
+      <td>部署加固建议合并</td>
+      <td>运维维度的部署健壮性建议尚未合并，含离线封堵核实、失败降级矩阵、备份回滚方案。</td>
+    </tr>
+    <tr>
+      <td><span class="tag t-p2">中</span></td>
+      <td>引入 pytest</td>
+      <td>从根上防止「回归测试沉默失败」复发。</td>
+    </tr>
+    <tr>
+      <td><span class="tag t-p2">中</span></td>
+      <td>导出物二次扫描</td>
+      <td>全部参赛材料导出后重新做一次双盲关键词扫描（PPT 备注页 / 视频字幕 / 海报小字）。</td>
+    </tr>
+  </tbody>
+</table>
+
+<h3>证据附录</h3>
+<p>六份详细审查报告保存在 <code>.workbuddy/review/</code>，均含 <code>文件:行号</code> 级证据：</p>
+<table>
+  <thead><tr><th>文件</th><th>维度</th><th>要点</th></tr></thead>
+  <tbody>
+    <tr><td><code>architect.md</code></td><td>架构</td><td>分层与耦合评估、并发选型论证、可维护性风险、技术增强项建议</td></tr>
+    <tr><td><code>backend.md</code></td><td>后端</td><td>缺陷清单（含实测复现）、并发与安全、4 条事实否证、修复方案</td></tr>
+    <tr><td><code>frontend.md</code></td><td>前端</td><td>P0 规则违规、21 处硬编码色值定位、内存泄漏、水印方案</td></tr>
+    <tr><td><code>qa.md</code></td><td>测试与质量</td><td>模型坍缩复核、测试缺口、EARS 验收标准、回归基线设计</td></tr>
+    <tr><td><code>designer.md</code></td><td>UI/UX</td><td>设计系统 Token、图标系统锁定、信息架构重组、合规校验</td></tr>
+    <tr><td><code>pm.md</code></td><td>产品与答辩</td><td>竞品对标矩阵、用户画像与市场数据、答辩脚本、双盲审计</td></tr>
+  </tbody>
+</table>
+
+<footer>
+  <p>禾目 AgriGuard · 作物病虫害智能诊断与精准处方系统</p>
+  <p>原创作品标识 AGRI-GUARD / v1.0 / 2026-09-20 · 指纹 HM-AG-2026-0920</p>
+  <span id="agri-origin-fingerprint"
+        data-work="AGRI-GUARD" data-ver="v1.0" data-ts="2026-09-20"
+        data-signature="HM-AG-2026-0920" aria-hidden="true" class="sr-only">
+    禾目 AgriGuard 原创作品 · AGRI-GUARD / v1.0 / 2026-09-20
+  </span>
+</footer>
+
+</div>
+</body>
+</html>
