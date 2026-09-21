@@ -27,7 +27,7 @@
   原创作品标识，用于防抄袭取证与原创性举证（详见 constants.py 说明）。
 """
 
-from typing import List, Optional
+from typing import Any, Dict, List, Optional
 
 from pydantic import BaseModel, Field
 
@@ -90,6 +90,12 @@ class PredictResponse(BaseModel):
     work: str = constants.WORK_ID
     signature: str = constants.ORIGIN_SIGNATURE
 
+    # --- 功能扩展（追加字段，既有字段一律不动，保证向后兼容）---
+    # history_id：带有效令牌诊断时自动入库后的记录 id；未入库为 None。
+    # class_key：命中的 PlantVillage 类别键，供前端跳转病例库。
+    history_id: Optional[int] = None
+    class_key: Optional[str] = None
+
 
 class MetaResponse(BaseModel):
     """`GET /api/v1/meta` 的响应体：向前端下发业务常量真值。
@@ -120,3 +126,141 @@ class HealthResponse(BaseModel):
     model_ready: bool = False
     work: str = constants.WORK_ID
     signature: str = constants.ORIGIN_SIGNATURE
+
+
+# ---------------------------------------------------------------------------
+# 账号与会话（Spec §5）
+# ---------------------------------------------------------------------------
+class UserOut(BaseModel):
+    id: int
+    username: str
+    display_name: str = ""
+    is_demo: bool = False
+
+
+class RegisterRequest(BaseModel):
+    username: str
+    password: str
+    display_name: Optional[str] = None
+
+
+class LoginRequest(BaseModel):
+    username: str
+    password: str
+
+
+class AuthResponse(BaseModel):
+    ok: bool = True
+    token: Optional[str] = None
+    user: Optional[UserOut] = None
+    reason: Optional[str] = None
+
+
+class MeResponse(BaseModel):
+    ok: bool = True
+    user: UserOut
+
+
+class OkResponse(BaseModel):
+    ok: bool = True
+
+
+# ---------------------------------------------------------------------------
+# 病例库（Spec §5）
+# ---------------------------------------------------------------------------
+class CaseClassBrief(BaseModel):
+    class_key: str
+    disease_cn: str
+    is_healthy: bool = False
+
+
+class CropGroup(BaseModel):
+    crop_key: str
+    crop_cn: str
+    count: int
+    classes: List[CaseClassBrief] = Field(default_factory=list)
+
+
+class CasesIndexResponse(BaseModel):
+    ok: bool = True
+    crops: List[CropGroup] = Field(default_factory=list)
+
+
+class CaseDetailResponse(BaseModel):
+    ok: bool = True
+    class_key: str
+    crop_key: str
+    crop_cn: str
+    disease_cn: str
+    is_healthy: bool = False
+    summary: str = ""
+    symptoms: List[str] = Field(default_factory=list)
+    prevention: List[str] = Field(default_factory=list)
+    image_url: str = ""
+
+
+# ---------------------------------------------------------------------------
+# 历史记录（Spec §5）
+# ---------------------------------------------------------------------------
+class HistoryItemBrief(BaseModel):
+    id: int
+    created_at: str
+    crop_cn: Optional[str] = None
+    disease_cn: Optional[str] = None
+    confidence: Optional[float] = None
+    severity_grade: Optional[str] = None
+    has_thumb: bool = False
+    is_ood: bool = False
+
+
+class HistoryItemFull(BaseModel):
+    id: int
+    created_at: str
+    class_key: Optional[str] = None
+    crop_cn: Optional[str] = None
+    disease_cn: Optional[str] = None
+    confidence: Optional[float] = None
+    ood_score: Optional[float] = None
+    is_ood: bool = False
+    is_warning: bool = False
+    severity_grade: Optional[str] = None
+    lesion_ratio: Optional[float] = None
+    # 用宽松 Dict 而非 Prescription：历史里的处方 JSON 可能来自手工补录，
+    # 若用严格模型，一条结构不完整的旧数据会让整个详情接口 500。
+    prescription: Optional[Dict[str, Any]] = None
+    prescription_source: Optional[str] = None
+    rejected_reason: Optional[str] = None
+    has_thumb: bool = False
+
+
+class HistoryListResponse(BaseModel):
+    ok: bool = True
+    total: int = 0
+    items: List[HistoryItemBrief] = Field(default_factory=list)
+
+
+class HistoryDetailResponse(BaseModel):
+    ok: bool = True
+    item: HistoryItemFull
+
+
+class HistoryCreateRequest(BaseModel):
+    """手动补录（可选端点）：不携带图片，缩略图为空。"""
+
+    class_key: Optional[str] = None
+    crop_cn: Optional[str] = None
+    disease_cn: Optional[str] = None
+    name: Optional[str] = None
+    confidence: Optional[float] = None
+    ood_score: Optional[float] = None
+    is_ood: bool = False
+    is_warning: bool = False
+    severity_grade: Optional[str] = None
+    lesion_ratio: Optional[float] = None
+    prescription: Optional[Dict[str, Any]] = None
+    prescription_source: Optional[str] = None
+
+
+class HistoryCreateResponse(BaseModel):
+    ok: bool = True
+    id: int

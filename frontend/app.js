@@ -15,6 +15,24 @@
 (function () {
   "use strict";
 
+  // ---------------------------------------------------------------------------
+  // 共享层：图标表 / 请求封装 / 轻提示 / pill / 处方区块都由 layout.js 提供，
+  // 全站唯一一份实现。本文件不再各存一份副本 —— 历史上"两套阈值各写一遍"
+  // 就是这么漂移的（见文件头的第 1 条审查修正）。
+  // ---------------------------------------------------------------------------
+  var AGRI = window.AGRI;
+  if (!AGRI) {
+    // 加载顺序被破坏时必须给出可见提示，而不是渲染出半个页面
+    document.addEventListener("DOMContentLoaded", function () {
+      var box = document.createElement("p");
+      box.className = "status status-error";
+      box.textContent = "界面脚本加载不完整（缺少 layout.js），请刷新页面重试。";
+      var host = document.querySelector(".app") || document.body;
+      host.insertBefore(box, host.firstChild);
+    });
+    return;
+  }
+
   var CFG = {
     work: "AGRI-GUARD",
     ver: "v1.0",
@@ -43,54 +61,24 @@
   var prescriptionEl = document.getElementById("prescription");
   var cropsList = document.getElementById("crops-list");
   var cropsCount = document.getElementById("crops-count");
+  var ttsRow = document.getElementById("tts-row");
+  var ttsBtn = document.getElementById("tts-btn");
+  var ttsIcon = document.getElementById("tts-icon");
+  var ttsLabel = document.getElementById("tts-label");
 
   // ---------------------------------------------------------------------------
-  // 图标（统一描边风格，尺寸仅 16 / 20 / 24 三档；不使用任何 emoji）
+  // 图标：统一描边风格，尺寸仅 16 / 20 / 24 三档；不使用任何 emoji。
+  // 表与渲染函数均在 layout.js（全站唯一）。
   // ---------------------------------------------------------------------------
-  var ICON_PATHS = {
-    chevron: '<path d="m6 9 6 6 6-6"/>',
-    info: '<circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/>',
-    alert: '<path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/>',
-    shield: '<path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/>',
-    flask: '<path d="M14 2v6a2 2 0 0 0 .245.96l5.51 10.08A2 2 0 0 1 18 22H6a2 2 0 0 1-1.755-2.96l5.51-10.08A2 2 0 0 0 10 8V2"/><path d="M6.453 15h11.094"/><path d="M8.5 2h7"/>',
-    calendar: '<path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/><path d="m9 16 2 2 4-4"/>',
-    activity: '<path d="M22 12h-2.48a2 2 0 0 0-1.93 1.46l-2.35 8.36a.25.25 0 0 1-.48 0L9.24 2.18a.25.25 0 0 0-.48 0l-2.35 8.36A2 2 0 0 1 4.49 12H2"/>',
-    rotate: '<path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/>',
-    imageOff: '<line x1="2" x2="22" y1="2" y2="22"/><path d="M10.41 10.41a2 2 0 1 1-2.83-2.83"/><line x1="13.5" x2="6" y1="13.5" y2="21"/><path d="M18 12l3 3"/><path d="M3 3l18 18"/>'
-  };
-
-  function iconSvg(name, size) {
-    var paths = ICON_PATHS[name] || "";
-    return (
-      '<svg width="' + size + '" height="' + size + '" viewBox="0 0 24 24" fill="none" ' +
-      'stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" ' +
-      'aria-hidden="true">' + paths + "</svg>"
-    );
-  }
+  var ICON_PATHS = AGRI.ICON_PATHS;
+  var iconSvg = AGRI.iconSvg;
 
   // ---------------------------------------------------------------------------
-  // 小工具
+  // 小工具（与 layout.js 同源，此处仅取别名，避免同名不同实现）
   // ---------------------------------------------------------------------------
-  function el(tag, className, text) {
-    var node = document.createElement(tag);
-    if (className) node.className = className;
-    if (text !== undefined && text !== null) node.textContent = String(text);
-    return node;
-  }
-
-  function pct(v) {
-    var n = Number(v);
-    return isFinite(n) ? (n * 100).toFixed(1) + "%" : "—";
-  }
-
-  function num(v, digits) {
-    var n = Number(v);
-    return isFinite(n) ? n.toFixed(digits === undefined ? 2 : digits) : "—";
-  }
-
-  function isHealthyName(name) {
-    return typeof name === "string" && name.indexOf("健康") !== -1;
-  }
+  var el = AGRI.el;
+  var pct = AGRI.pct;
+  var num = AGRI.num;
 
   // ---------------------------------------------------------------------------
   // 业务常量真值：从后端下发，前端不硬编码
@@ -247,12 +235,147 @@
   }
 
   function resetResult() {
+    stopSpeech();
+    ttsRow.hidden = true;
+    lastData = null;
     resultEl.hidden = true;
     verdictEl.textContent = "";
     heatmapBlock.hidden = true;
     heatmapImg.removeAttribute("src");
     detailBlock.textContent = "";
     prescriptionEl.textContent = "";
+  }
+
+  // ---------------------------------------------------------------------------
+  // 语音朗读（Web Speech API）
+  // ---------------------------------------------------------------------------
+  // 播报顺序固定：作物名 + 病害名 + 严重程度 + 处方摘要（设计规格 §2.5）。
+  // 纪律：任何不可用路径都必须有可见提示（AC-15），不得静默失败。
+  var TTS_UNSUPPORTED_MSG = "当前浏览器不支持语音朗读，换用 Chrome 或 Edge 可以听到。";
+  var TTS_ERROR_MSG = "朗读失败，请再试一次。";
+  var GRADE_SPEECH = { "轻": "轻微", "中": "中等", "重": "严重", "待评估": "待评估" };
+
+  var speechSupported = false;
+  try {
+    speechSupported = typeof window.speechSynthesis !== "undefined" && typeof window.SpeechSynthesisUtterance !== "undefined";
+  } catch (e) {
+    speechSupported = false;
+  }
+
+  var speechPlaying = false;
+  var speechCancelling = false; // cancel() 会触发 onerror(interrupted)，用它区分"主动停止"与"真出错"
+  var ttsWarned = false;
+  var lastData = null;
+  var notSavedNoticeShown = false; // 「未保存」提示每次会话只弹一次
+
+  function buildSpeechText(data) {
+    if (!data || data.ok === false) return "";
+    var dets = Array.isArray(data.detections) ? data.detections : [];
+    var top = dets.length ? dets[0] : null;
+    var rx = data.prescription || null;
+    var head = top && top.name ? String(top.name) : rx && rx.disease ? String(rx.disease) : "";
+    if (!head && !rx) return "";
+
+    var chunks = [];
+    if (head) chunks.push(head.replace(/\s*·\s*/g, "，"));
+    var grade = data.severity_grade;
+    // 健康样本的病害名本身就是「健康」，别再念一遍"植株健康"
+    if (grade === "健康") {
+      if (!/健康/.test(head)) chunks.push("植株健康");
+    } else if (grade) {
+      chunks.push("严重程度" + (GRADE_SPEECH[grade] || grade));
+    }
+
+    var text = chunks.join("，") + "。";
+    if (rx && rx.summary) text += "防治建议：" + String(rx.summary);
+    return text;
+  }
+
+  function setTtsPlaying(on) {
+    speechPlaying = on;
+    ttsBtn.classList.toggle("is-playing", on);
+    ttsBtn.setAttribute("aria-pressed", on ? "true" : "false");
+    ttsBtn.setAttribute("aria-label", on ? "停止朗读" : "朗读本次诊断结论");
+    ttsIcon.innerHTML = iconSvg(on ? "volumeOff" : "volume", 20);
+    ttsLabel.textContent = on ? "停止朗读" : "朗读结论";
+  }
+
+  function stopSpeech() {
+    if (!speechSupported) return;
+    try {
+      speechCancelling = true;
+      window.speechSynthesis.cancel();
+    } catch (e) {
+      /* 忽略 */
+    }
+    setTtsPlaying(false);
+  }
+
+  function startSpeech() {
+    var text = buildSpeechText(lastData);
+    if (!text) {
+      AGRI.toast("本次没有可朗读的结论。", "info");
+      return;
+    }
+    // 进入播放流程即清掉「主动取消」标记：此后收到的任何 onerror 都是真失败，
+    // 必须被报出来。否则上一次 stopSpeech() 留下的标记会让本次错误被误判为
+    // "用户自己停的"而不给任何提示 —— 那正是 AC-15 禁止的静默失败。
+    speechCancelling = false;
+    try {
+      window.speechSynthesis.cancel();
+      var utter = new window.SpeechSynthesisUtterance(text);
+      utter.lang = "zh-CN";
+      utter.rate = 1;
+      utter.pitch = 1;
+
+      // 有些环境「声称支持」语音合成却没有任何可用语音（例如无声卡 / 引擎缺失），
+      // 它会立即结束或干脆不发声。用 onstart 判定是否真的开了口：
+      // 从未 onstart 就直接 onend ⇒ 等同于不可用，必须给出可见提示（AC-15）。
+      var started = false;
+      utter.onstart = function () {
+        started = true;
+      };
+      utter.onend = function () {
+        var wasCancel = speechCancelling;
+        speechCancelling = false;
+        setTtsPlaying(false);
+        if (!started && !wasCancel) AGRI.toast(TTS_UNSUPPORTED_MSG, "info");
+      };
+      utter.onerror = function () {
+        var wasCancel = speechCancelling;
+        speechCancelling = false;
+        setTtsPlaying(false);
+        if (!wasCancel) AGRI.toast(TTS_ERROR_MSG, "error");
+      };
+
+      setTtsPlaying(true);
+      window.speechSynthesis.speak(utter);
+    } catch (e) {
+      speechCancelling = false;
+      setTtsPlaying(false);
+      AGRI.toast(TTS_ERROR_MSG, "error");
+    }
+  }
+
+  function warnTtsUnsupported() {
+    if (speechSupported || ttsWarned) return;
+    ttsWarned = true;
+    AGRI.toast(TTS_UNSUPPORTED_MSG, "info");
+  }
+
+  function initTts() {
+    ttsIcon.innerHTML = iconSvg("volume", 20);
+    if (!speechSupported) {
+      ttsBtn.disabled = true;
+      ttsBtn.setAttribute("aria-label", "当前浏览器不支持语音朗读");
+      ttsBtn.setAttribute("aria-pressed", "false");
+      warnTtsUnsupported(); // 页面加载即给可见提示，而不是等用户点了才发现没反应
+      return;
+    }
+    ttsBtn.addEventListener("click", function () {
+      if (speechPlaying) stopSpeech();
+      else startSpeech();
+    });
   }
 
   // ---------------------------------------------------------------------------
@@ -285,7 +408,18 @@
     var form = new FormData();
     form.append("file", file);
 
-    fetch("/api/v1/predict", { method: "POST", body: form, signal: localSignal.signal })
+    // 带令牌诊断 → 后端自动写入一条历史（含缩略图）；不带或令牌已失效
+    // → 照常诊断、只是不入库，不报错、不中断（Spec §5.1 / AC-10）。
+    var headers = {};
+    var token = AGRI.getToken();
+    if (token) headers.Authorization = "Bearer " + token;
+
+    fetch("/api/v1/predict", {
+      method: "POST",
+      body: form,
+      headers: headers,
+      signal: localSignal.signal
+    })
       .then(function (r) {
         if (!r.ok) throw new Error("服务返回 " + r.status);
         return r.json();
@@ -316,27 +450,14 @@
   // ---------------------------------------------------------------------------
   // 渲染
   // ---------------------------------------------------------------------------
+  // 可信度 / 严重度 pill 的阈值判定只有一份实现（layout.js），
+  // 病例库与历史页复用同一套，避免各处再写一份阈值。
   function confidencePill(conf) {
-    var n = Number(conf);
-    if (!isFinite(n)) return el("span", "pill pill-neutral", "可信度 —");
-    var level = n >= 0.85 ? "高" : n >= 0.6 ? "中" : "低";
-    var cls = n >= 0.85 ? "pill-success" : n >= 0.6 ? "pill-warn" : "pill-danger";
-    var pill = el("span", "pill " + cls);
-    pill.appendChild(el("span", null, "可信度 " + level));
-    pill.appendChild(el("span", "pill-num", pct(n)));
-    return pill;
+    return AGRI.confidencePill(conf);
   }
 
   function severityPill(grade) {
-    var text = grade || "待评估";
-    var cls = "pill-neutral";
-    if (text === "健康") cls = "pill-success";
-    else if (text === "轻") cls = "pill-warn";
-    else if (text === "中" || text === "重") cls = "pill-danger";
-    var pill = el("span", "pill " + cls);
-    pill.innerHTML = iconSvg("activity", 16);
-    pill.appendChild(el("span", null, "严重程度 " + text));
-    return pill;
+    return AGRI.severityPill(grade);
   }
 
   function lesionPill(ratio) {
@@ -427,32 +548,8 @@
     );
   }
 
-  var RX_BLOCKS = [
-    { key: "biological", label: "生物防治", icon: "shield" },
-    { key: "chemical", label: "化学用药", icon: "flask" },
-    { key: "tips", label: "日常管理", icon: "calendar" }
-  ];
-
   function renderPrescription(rx) {
-    prescriptionEl.textContent = "";
-    if (!rx) {
-      prescriptionEl.appendChild(el("p", "empty-note", "未识别到有效病害，请重拍或换一张清晰照片。"));
-      return;
-    }
-    RX_BLOCKS.forEach(function (cfg) {
-      var text = rx[cfg.key];
-      if (text === undefined || text === null || text === "") return;
-      var block = el("div", "rx-block");
-      var head = el("div", "rx-head");
-      head.innerHTML = iconSvg(cfg.icon, 20);
-      head.appendChild(el("span", null, cfg.label));
-      block.appendChild(head);
-      block.appendChild(el("p", null, String(text)));
-      prescriptionEl.appendChild(block);
-    });
-    if (!prescriptionEl.childNodes.length) {
-      prescriptionEl.appendChild(el("p", "empty-note", "本次未返回处方内容。"));
-    }
+    AGRI.renderPrescription(rx, prescriptionEl);
   }
 
   function renderRejection(data) {
@@ -509,6 +606,10 @@
     renderVerdict(data);
     renderDetail(data, dets);
 
+    // 语音朗读：有可播报内容才露出入口（拒识 / 无结论时不显示空按钮）
+    lastData = data;
+    ttsRow.hidden = !buildSpeechText(data);
+
     if (data.warning) {
       var warn = el("div", "notice notice-warn");
       var t = el("p", "notice-title");
@@ -534,6 +635,12 @@
       note.textContent =
         "本条处方由内置模板生成（未接入大模型）。接入大模型后，将根据病害与严重程度输出个性化处方。";
       prescriptionEl.appendChild(note);
+    }
+
+    // 未登录（或令牌已失效）时后端不落库：明确告知一次，不阻断、不报错（AC-10）
+    if ((data.history_id === null || data.history_id === undefined) && !notSavedNoticeShown) {
+      notSavedNoticeShown = true;
+      AGRI.toast("本次结果未保存，登录后会自动留存。", "info");
     }
 
     // 出结果后把结论卡带入视野，便于演示时无需手动滚动
@@ -630,6 +737,14 @@
 
   window.addEventListener("beforeunload", function () {
     if (currentObjectUrl) URL.revokeObjectURL(currentObjectUrl);
+    // 离开页面必须掐断朗读，否则部分浏览器会在后台继续播
+    if (speechSupported) {
+      try {
+        window.speechSynthesis.cancel();
+      } catch (e) {
+        /* 忽略 */
+      }
+    }
   });
 
   // ---------------------------------------------------------------------------
@@ -637,5 +752,6 @@
   // ---------------------------------------------------------------------------
   installVerifier();
   agriOriginClaim();
+  initTts();
   loadMeta();
 })();

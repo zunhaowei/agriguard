@@ -162,6 +162,49 @@ def severity_grade(lesion_ratio: Optional[float], is_healthy: bool) -> str:
     return "重"
 
 
+# ---------------------------------------------------------------------------
+# 历史记录缩略图（Spec §10：最长边 ≤320px、JPEG 质量 80）
+# ---------------------------------------------------------------------------
+# 为什么必须在这里就地把图片压成 BLOB：uploads/ 有 24 小时惰性回收策略，
+# 若历史记录只存文件路径，过一天图就会变空白。因此入库前先压成缩略图字节。
+THUMB_MAX_EDGE = 320
+THUMB_JPEG_QUALITY = 80
+
+
+def make_thumbnail_bytes(
+    path: Path,
+    max_edge: int = THUMB_MAX_EDGE,
+    quality: int = THUMB_JPEG_QUALITY,
+) -> Optional[bytes]:
+    """把图片压成缩略图 JPEG 字节；无法读取时返回 None（不抛异常）。
+
+    仅供历史入库使用：调用方对 None 必须容错（没有缩略图不应影响诊断与入库）。
+    """
+    try:
+        img = cv2.imread(str(path))
+    except Exception:
+        logger.debug("缩略图读取失败：%s", path, exc_info=True)
+        return None
+    if img is None:
+        return None
+
+    h, w = img.shape[:2]
+    longest = max(h, w)
+    if longest > max_edge:
+        scale = max_edge / float(longest)
+        new_size = (max(1, int(round(w * scale))), max(1, int(round(h * scale))))
+        img = cv2.resize(img, new_size, interpolation=cv2.INTER_AREA)
+
+    try:
+        ok, buf = cv2.imencode(
+            ".jpg", img, [int(cv2.IMWRITE_JPEG_QUALITY), int(quality)]
+        )
+    except Exception:
+        logger.debug("缩略图编码失败：%s", path, exc_info=True)
+        return None
+    return buf.tobytes() if ok else None
+
+
 def gc_uploads(upload_dir: Path, retention_seconds: int = constants.UPLOAD_RETENTION_SECONDS) -> int:
     """回收过期的上传文件（原图与热力图一并删除）。
 

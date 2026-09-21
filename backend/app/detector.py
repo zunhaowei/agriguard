@@ -290,6 +290,25 @@ class Detector:
 
     # -- 元信息 -------------------------------------------------------------
 
+    def class_key_for(self, class_id: Optional[int]) -> Optional[str]:
+        """按类别索引取 PlantVillage 原始类名（如 `Tomato___Early_blight`）。
+
+        供 `/api/v1/predict` 追加 `class_key` 字段（前端据此跳转病例库）。
+        只读取权重自带的 `names` 映射，不触碰推理状态；任何异常返回 None，
+        绝不因该辅助信息失败而影响诊断主流程。
+        """
+        if class_id is None or self.model is None:
+            return None
+        try:
+            names = self.model.names
+        except (Exception, SystemExit):
+            return None
+        if isinstance(names, dict):
+            return names.get(class_id)
+        if isinstance(names, (list, tuple)) and 0 <= class_id < len(names):
+            return names[class_id]
+        return None
+
     def model_info(self) -> dict:
         """返回模型元信息，供 /meta 与结果区展示（体现"轻量本地推理"）。"""
         if self._weight_path is None:

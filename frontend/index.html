@@ -12,18 +12,13 @@
   <meta name="author" content="AgriGuard" />
   <title>禾目 AgriGuard · 作物病虫害智能诊断与精准处方系统</title>
   <link rel="icon" type="image/svg+xml" href="/static/logo_icon.svg" />
-  <link rel="stylesheet" href="/static/styles.css?v=6" />
+  <link rel="stylesheet" href="/static/styles.css?v=7" />
+  <!-- 全站共享脚本：注入统一顶部导航 / 底部标签栏 / 登录态 / 共享工具。
+       放 <head> 是为了在首次绘制前就完成导航注入（避免内容先闪一下再补导航）。 -->
+  <script src="/static/layout.js?v=7"></script>
 </head>
-<body>
+<body data-page="index">
   <div class="app">
-    <header class="topbar">
-      <div class="brand">
-        <img class="brand-mark" src="/static/logo_icon.svg" alt="" width="32" height="32" />
-        <span class="brand-name">禾目<span class="brand-latin">AgriGuard</span></span>
-      </div>
-      <span class="badge-compliance">AI 辅助制作</span>
-    </header>
-
     <main>
       <section class="hero">
         <h1>拍一张病叶照片<br />秒出诊断与防治处方</h1>
@@ -126,6 +121,20 @@
         <h2 class="card-title" id="step-verdict"><span class="step-no">2</span>诊断结论</h2>
         <div id="verdict" class="verdict"></div>
 
+        <!-- 语音朗读：紧跟诊断结论之后，结论一出来就能看到朗读入口 -->
+        <div id="tts-row" class="tts-row" hidden>
+          <button
+            id="tts-btn"
+            type="button"
+            class="btn btn-secondary tts-btn"
+            aria-label="朗读本次诊断结论"
+            aria-pressed="false"
+          >
+            <span class="tts-icon" id="tts-icon" aria-hidden="true"></span>
+            <span class="tts-label" id="tts-label">朗读结论</span>
+          </button>
+        </div>
+
         <div id="heatmap-block" class="sub-block" hidden>
           <h3 class="sub-title">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -173,6 +182,6 @@
     </footer>
   </div>
 
-  <script src="/static/app.js?v=6"></script>
+  <script src="/static/app.js?v=7"></script>
 </body>
 </html>

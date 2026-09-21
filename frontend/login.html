@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<!--
+  禾目 AgriGuard · 登录 / 注册
+  原创作品标识 AGRI-GUARD / v1.0-ext / 2026-09-21
+  本页面前端由禾目团队独立设计与编写。作品指纹见运行期控制台与页脚 DOM 标记。
+-->
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="登录禾目 AgriGuard，让每次诊断都自动留在你的记录里。" />
+  <meta name="author" content="AgriGuard" />
+  <title>登录 / 注册 · 禾目 AgriGuard</title>
+  <link rel="icon" type="image/svg+xml" href="/static/logo_icon.svg" />
+  <link rel="stylesheet" href="/static/styles.css?v=7" />
+  <script src="/static/layout.js?v=7"></script>
+</head>
+<body data-page="login">
+  <div class="app">
+    <main>
+      <div class="auth-layout">
+        <section class="auth-aside">
+          <h1 class="auth-aside-title">认识病害，从一张照片开始</h1>
+          <ul class="auth-points">
+            <li>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              <span>登录后，每次诊断都会自动存进你的记录，随时能翻回来</span>
+            </li>
+            <li>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 7v14"/><path d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z"/></svg>
+              <span>病例库里有 14 种作物、38 类病害的真实例图，拍之前先认认脸</span>
+            </li>
+            <li>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5 6 9H2v6h4l5 4z"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>
+              <span>结论能读给你听，手上忙的时候不用盯着屏幕</span>
+            </li>
+          </ul>
+          <figure class="auth-aside-figure">
+            <img src="/static/_demo_leaf_compliant.jpg" alt="合规拍摄示例：单片叶片平铺在纯色背景上" />
+          </figure>
+        </section>
+
+        <section class="auth-card">
+          <div class="auth-stack">
+            <div class="tabs" role="tablist" aria-label="账号入口">
+              <button id="tab-login" class="tab" type="button" role="tab" aria-selected="true" aria-controls="panel-login" tabindex="0">登录</button>
+              <button id="tab-register" class="tab" type="button" role="tab" aria-selected="false" aria-controls="panel-register" tabindex="-1">注册</button>
+            </div>
+
+            <div id="notice-slot"></div>
+
+            <div id="panel-login" role="tabpanel" aria-labelledby="tab-login" tabindex="-1">
+              <form class="form" id="form-login" novalidate>
+                <div id="login-alert"></div>
+
+                <div class="field">
+                  <label class="field-label" for="login-username">用户名<span class="field-req" aria-hidden="true">*</span></label>
+                  <input id="login-username" name="username" class="input" type="text" autocomplete="username"
+                         aria-describedby="login-username-hint login-username-err" aria-invalid="false" />
+                  <p class="field-hint" id="login-username-hint">3–20 位，字母、数字或下划线。</p>
+                  <p class="field-error" id="login-username-err" role="alert" hidden></p>
+                </div>
+
+                <div class="field">
+                  <label class="field-label" for="login-password">密码<span class="field-req" aria-hidden="true">*</span></label>
+                  <input id="login-password" name="password" class="input" type="password" autocomplete="current-password"
+                         aria-describedby="login-password-err" aria-invalid="false" />
+                  <p class="field-error" id="login-password-err" role="alert" hidden></p>
+                </div>
+
+                <button id="login-submit" class="btn btn-primary btn-block" type="submit">登录</button>
+              </form>
+            </div>
+
+            <div id="panel-register" role="tabpanel" aria-labelledby="tab-register" tabindex="-1" hidden>
+              <form class="form" id="form-register" novalidate>
+                <div id="register-alert"></div>
+
+                <div class="field">
+                  <label class="field-label" for="register-username">用户名<span class="field-req" aria-hidden="true">*</span></label>
+                  <input id="register-username" name="username" class="input" type="text" autocomplete="username"
+                         aria-describedby="register-username-hint register-username-err" aria-invalid="false" />
+                  <p class="field-hint" id="register-username-hint">3–20 位，字母、数字或下划线。</p>
+                  <p class="field-error" id="register-username-err" role="alert" hidden></p>
+                </div>
+
+                <div class="field">
+                  <label class="field-label" for="register-display">显示名称</label>
+                  <input id="register-display" name="display_name" class="input" type="text" autocomplete="nickname"
+                         aria-describedby="register-display-hint" aria-invalid="false" />
+                  <p class="field-hint" id="register-display-hint">可选，用于在导航栏里称呼你。</p>
+                </div>
+
+                <div class="field">
+                  <label class="field-label" for="register-password">密码<span class="field-req" aria-hidden="true">*</span></label>
+                  <input id="register-password" name="password" class="input" type="password" autocomplete="new-password"
+                         aria-describedby="register-password-hint register-password-err" aria-invalid="false" />
+                  <p class="field-hint" id="register-password-hint">至少 8 位，建议字母加数字。</p>
+                  <p class="field-error" id="register-password-err" role="alert" hidden></p>
+                </div>
+
+                <button id="register-submit" class="btn btn-primary btn-block" type="submit">创建账号</button>
+              </form>
+            </div>
+
+            <div class="demo-hint">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+              <span class="demo-hint-text" id="demo-hint-text">想直接看看效果？用演示账号 <code>demo</code> / <code>demo1234</code></span>
+              <button id="fill-demo" class="btn btn-ghost" type="button">一键填入</button>
+            </div>
+          </div>
+        </section>
+      </div>
+    </main>
+
+    <footer>
+      <p>智慧农业 · 减肥减药 · 数字乡村</p>
+      <p class="footer-note">本作品使用 AI 辅助开发，对外材料已标注「AI 辅助制作」。</p>
+      <span
+        id="agri-origin-fingerprint"
+        data-work="AGRI-GUARD"
+        data-ver="v1.0-ext"
+        data-ts="2026-09-21"
+        data-signature="HM-AG-2026-0920"
+        aria-hidden="true"
+        class="sr-only"
+      >禾目 AgriGuard 原创作品 · AGRI-GUARD / v1.0-ext / 2026-09-21</span>
+    </footer>
+  </div>
+
+  <script src="/static/login.js?v=7"></script>
+</body>
+</html>
