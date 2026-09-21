@@ -136,14 +136,55 @@ def test_oversized_upload_rejected(client):
 # 业务链路
 # ---------------------------------------------------------------------------
 
-def test_background_rejected(client):
-    """纹理背景（开发早期的示例图）应被拍摄形式校验拦下。"""
-    src = FRONTEND / "_demo_leaf.jpg"
-    if not src.exists():
-        pytest.skip("缺少纹理背景测试素材 frontend/_demo_leaf.jpg")
-    data = _post(client, src.read_bytes(), "textured.jpg")
+def test_non_leaf_rejected(client):
+    """非叶片内容必须被拦下 —— 前置校验的核心不变式。"""
+    gray = np.full((300, 300, 3), 128, np.uint8)
+    data = _post(client, _encode(gray), "gray_block.jpg")
     assert data["ok"] is False
-    assert "背景" in (data.get("reason") or "")
+    assert "未检测到叶片" in (data.get("reason") or ""), f"reason={data.get('reason')}"
+
+
+def test_random_noise_rejected(client):
+    """随机噪声不是叶片，必须被拒（由前置校验或 OOD 兜住，二者之一即可）。"""
+    rng = np.random.default_rng(11)
+    noise = rng.integers(0, 255, (300, 300, 3), dtype=np.uint8)
+    data = _post(client, _encode(noise), "noise.jpg")
+    assert data["ok"] is False, "随机噪声被接受了，质量闸门失效"
+
+
+def test_precheck_accepts_training_distribution():
+    """前置校验必须放行与训练分布同源的样本 —— 防回归用例。
+
+    背景：2026-09-20 之前，背景判据把四边 8% 的边缘带**整块**当背景来统计，
+    但叶片常伸到画面边缘，叶片像素污染统计量，把"均匀灰背景"算成"背景不纯"。
+    实测后果：PlantVillage **自己的验证集只有约 20% 能通过前置校验**，
+    也就是产品会拒绝它最擅长的那类输入。
+    修复后（只在真背景像素上评估 + 阈值重标定）实测通过率 99.2%。
+
+    本用例直接调用校验函数（不跑模型），抽 60 张验证集样本，要求通过率 ≥ 90%。
+    """
+    val_root = ROOT / "data" / "plantvillage" / "val"
+    if not val_root.exists():
+        pytest.skip("训练集不在仓库内（已被 .gitignore 排除）")
+
+    from app.precheck import check_leaf_and_background
+
+    imgs = []
+    for d in sorted(p for p in val_root.iterdir() if p.is_dir()):
+        files = [f for f in d.iterdir() if f.is_file() and f.suffix.lower() in (".jpg", ".jpeg", ".png")]
+        if files:
+            imgs.append(files[0])
+        if len(imgs) >= 60:
+            break
+    if len(imgs) < 20:
+        pytest.skip("验证集样本不足")
+
+    passed = sum(1 for p in imgs if check_leaf_and_background(str(p))[0])
+    rate = passed / len(imgs)
+    assert rate >= 0.90, (
+        f"前置校验只放行了 {rate*100:.1f}% 的同分布样本（{passed}/{len(imgs)}）。"
+        "这说明背景判据又被收紧过头了 —— 修复前该值约为 20%，属已知缺陷。"
+    )
 
 
 def test_synthetic_ood_band(client):

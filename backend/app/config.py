@@ -70,8 +70,10 @@ LLM_BASE_URL = os.getenv(
 LLM_MODEL = os.getenv("LLM_MODEL", "qwen-plus").strip()
 # 单次 LLM 调用的超时。原实现只有 timeout=30 且不区分连接/读取超时，
 # 断网时会把请求线程拖满 30 秒。现拆分为 (连接, 读取) 两段并整体收紧。
-LLM_CONNECT_TIMEOUT = float(os.getenv("LLM_CONNECT_TIMEOUT", "3.5"))
-LLM_READ_TIMEOUT = float(os.getenv("LLM_READ_TIMEOUT", "12"))
+# 读取超时的默认值设为 20s：实测完整处方 qwen-flash 约 5s、qwen-plus 约 10s，
+# 留不足余量会导致请求超时后**静默回落模板**，而外部看起来仍像"大模型处方"。
+LLM_CONNECT_TIMEOUT = float(os.getenv("LLM_CONNECT_TIMEOUT", "4"))
+LLM_READ_TIMEOUT = float(os.getenv("LLM_READ_TIMEOUT", "20"))
 
 
 def _read_llm_switch() -> bool:

@@ -148,8 +148,31 @@ class Prescriber:
             ])
             return None
 
+        # 字段归一化：**不同模型的返回形态并不一致**，必须统一。
+        # 实测（2026-09-20）：多数模型返回字符串，但 qwen3-max 会把分点内容
+        # 返回为数组，直接 str() 会得到 "['...', '...']" 这种带方括号与引号的难读结果。
+        # 这里统一转成面向农户的纯文本：数组按行拼接，对象按「键：值」拼接。
+        normalized = {}
+        for k in _REQUIRED_FIELDS:
+            v = data[k]
+            if isinstance(v, (list, tuple)):
+                parts = [str(x).strip() for x in v if str(x).strip()]
+                v = "\n".join(parts)
+            elif isinstance(v, dict):
+                v = "；".join(f"{kk}：{vv}" for kk, vv in v.items())
+            else:
+                v = str(v).strip()
+            normalized[k] = v
+
+        if not all(normalized[k] for k in _REQUIRED_FIELDS):
+            logger.warning(
+                "大模型返回存在空字段，回落模板：%s",
+                [k for k in _REQUIRED_FIELDS if not normalized[k]],
+            )
+            return None
+
         try:
-            return Prescription(**{k: str(data[k]) for k in _REQUIRED_FIELDS})
+            return Prescription(**normalized)
         except Exception:
             logger.exception("构造处方对象失败")
             return None

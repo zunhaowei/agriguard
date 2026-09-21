@@ -89,17 +89,22 @@ def main():
         _summary()
         return
 
-    # 2. 纹理背景 demo 应被前置校验拒绝
+    # 2. 非叶片内容应被前置校验拒绝
+    #    说明：原先这里用「纹理背景示例图」做用例，但 2026-09-20 前置校验重标定后，
+    #    背景判据改为「只在真背景像素上评估」，那张图的背景不再被视为不合规
+    #    （它带轻微纹理但主色集中）。改用无绿色像素的纯灰块，作为稳定的不变式用例。
     try:
-        with open(ROOT / "frontend" / "_demo_leaf.jpg", "rb") as f:
-            data = predict_from_bytes(f.read(), "demo.jpg")
+        img = np.full((300, 300, 3), 128, np.uint8)
+        ok_enc, buf = cv2.imencode(".jpg", img)
+        assert ok_enc
+        data = predict_from_bytes(buf.tobytes(), "gray_block.jpg")
         check(
-            "background_rejected",
-            data.get("ok") is False and "背景" in (data.get("reason") or ""),
+            "non_leaf_rejected",
+            data.get("ok") is False and "未检测到叶片" in (data.get("reason") or ""),
             f"ok={data.get('ok')}, reason={data.get('reason')}",
         )
     except Exception as e:
-        check("background_rejected", False, str(e))
+        check("non_leaf_rejected", False, str(e))
 
     # 3. 黑底椭圆（ood≈0.22）应被 OOD 拒识，且附带模型 top3（方案 B 特性）
     try:
