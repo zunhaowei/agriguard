@@ -160,7 +160,7 @@ html = f"""<!DOCTYPE html>
   <table>
     <tr><th style="width:140px">指标</th><th>数值</th></tr>
     <tr><td>类别数</td><td>38 类（含健康状态与常见病害）</td></tr>
-    <tr><td>图像总量</td><td>54,305 张</td></tr>
+    <tr><td>图像总量</td><td>60,343 张（train 48,282 / val 12,061）</td></tr>
     <tr><td>训练集 / 验证集</td><td>43,515 张 / 10,790 张（约 8:2）</td></tr>
   </table>
   <div class="problem"><b>问题</b>：数据集目录名含括号、逗号、空格及末尾下划线等特殊字符
@@ -252,7 +252,7 @@ html = f"""<!DOCTYPE html>
     <tr><td>25</td><td>0.02074</td><td>0.99759</td><td>1.00000</td><td>0.00865</td></tr>
     <tr><td>30</td><td>0.01078</td><td>0.99796</td><td>1.00000</td><td>0.00741</td></tr>
   </table>
-  <div class="callout">最终模型 <code>best.pt</code>：Top-1 <b>99.80%</b>，Top-5 <b>100%</b>，验证损失 <b>0.00741</b>。</div>
+  <div class="callout">首轮模型（v1）：Top-1 <b>99.80%</b>，Top-5 <b>100%</b>，验证损失 <b>0.00741</b>。当前部署为 <b>v2</b>（2026-09-15 重训）：Top-1 <b>99.74%</b>、验证损失 <b>0.00912</b>。</div>
   <div class="footer">禾目 AgriGuard · 开发日志 · 第 8 页</div>
 </div>
 
@@ -323,7 +323,7 @@ html = f"""<!DOCTYPE html>
   <h2 class="sec">八、核心产出物清单</h2>
   <table>
     <tr><th style="width:170px">产出物</th><th>说明</th></tr>
-    <tr><td><code>models/best.pt</code></td><td>训练收敛的 YOLO11n-cls 分类模型（Top-1 99.8%）</td></tr>
+    <tr><td><code>models/best.pt</code></td><td>训练收敛的 YOLO11n-cls 分类模型（当前 v2，Top-1 99.74%）</td></tr>
     <tr><td>后端 <code>backend/</code></td><td>FastAPI 服务 + 识别 / 处方 / Grad-CAM 模块</td></tr>
     <tr><td>前端 <code>frontend/</code></td><td>原生 Web 交互界面（上传—结果—热力图—处方）</td></tr>
     <tr><td>演示视频 <code>media/demo_video.mp4</code></td><td>1080p 中文配音，完整演示运行效果</td></tr>

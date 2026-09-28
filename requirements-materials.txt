@@ -1,0 +1,46 @@
+# 参赛物料生成依赖（构建期工具，**不是运行时依赖**）
+
+> ⚠️ 本文件里的包**只用于生成参赛物料**（演示视频、海报、PPT、开发日志），
+> **运行本系统不需要它们**。部署/演示环境只需安装 `requirements.txt`。
+>
+> 单独拆出来的原因：本项目依赖纪律严格（`ultralytics` 已锁死 8.4.137，
+> 版本漂移曾导致推理完全不可用），运行时依赖面越小、换机器复现越稳。
+
+安装：
+```bat
+.venv\Scripts\python.exe -m pip install -r requirements-materials.txt -i https://pypi.tuna.tsinghua.edu.cn/simple
+```
+
+| 包 | 用途 | 备注 |
+|---|---|---|
+| `imageio-ffmpeg` | 提供 ffmpeg 可执行文件 | 随包自带 win-x86_64 静态版（实测 7.1），**无需另外安装系统 ffmpeg**；视频合成、音频转码、抽帧都靠它 |
+| `edge-tts` | 生成中文旁白语音 | 调用微软在线语音服务（`zh-CN-XiaoxiaoNeural`），**需要联网**；离线环境无法生成旁白，但视频本身可无音轨合成 |
+
+## 物料生成流水线（按顺序执行）
+
+```bat
+:: 0. 前置：服务需要能跑起来（截取真实界面截图用）
+run.bat
+
+:: 1. 高清病叶素材 -> media/gen/leaf_disease_hi.jpg
+.venv\Scripts\python.exe scripts\build_leaf_asset.py
+
+:: 2. 高清热力图 -> 参赛材料/assets/heatmap_hi.png（用真实模型跑 Grad-CAM）
+.venv\Scripts\python.exe scripts\regenerate_heatmap.py
+
+:: 3. 旁白语音 + 时长 -> media/audio/*.wav、media/narration.json（需联网）
+.venv\Scripts\python.exe scripts\narrate.py
+
+:: 4. 产品界面截图 -> media/screens/*.png（CDP 驱动无头 Chrome，需服务在跑）
+.venv\Scripts\python.exe scripts\capture_screens.py
+
+:: 5. 合成演示视频 -> media/demo_video.mp4
+.venv\Scripts\python.exe scripts\build_video2.py
+
+:: 6. 生成产品海报 -> 参赛材料/产品海报.jpg
+.venv\Scripts\python.exe scripts\build_poster.py
+```
+
+> **为什么把这条流水线写下来**：`media/` 目录曾整体丢失过一次，导致视频与海报无法重建。
+> 上述 6 个脚本是**可复现的完整链路**——只要按顺序跑，任何一台机器都能重做出同样的物料。
+> 中间产物（`media/frames/`、`media/audio/`）体积大且可重建，故不进版本控制。

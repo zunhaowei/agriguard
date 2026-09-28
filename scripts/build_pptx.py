@@ -370,7 +370,7 @@ arch_box(Inches(0.9), Inches(1.9), Inches(11.55), Inches(0.95), "展示层 · �
 arch_box(Inches(0.9), Inches(3.05), Inches(11.55), Inches(0.95), "服务层 · FastAPI 接口", "/predict 接收图片，编排识别 → 定位 → 处方全流程", CYAN)
 # 引擎层（三卡）
 engines = [
-    ("病害识别引擎", "YOLO11n-cls\n38 类 · 99.8%", PRIMARY),
+    ("病害识别引擎", "YOLO11n-cls\n38 类 · 99.7%", PRIMARY),
     ("可视化解译", "Grad-CAM\n染病区域高亮", PRIMARY),
     ("精准处方引擎", "通义千问 qwen-plus\n结构化处方", PRIMARY),
 ]
@@ -392,7 +392,7 @@ footer(s, 7)
 # ================= Slide 8 病害识别引擎 =================
 s = new_slide()
 title_bar(s, "03", "病害识别引擎：YOLO11n-cls 深度学习模型", "38 类作物病害与健康状态识别")
-stats = [("99.8%", "Top-1 准确率"), ("38 类", "病害/健康类别"), ("54,305 张", "PlantVillage 数据")]
+stats = [("99.7%", "Top-1 准确率"), ("38 类", "病害/健康类别"), ("60,343 张", "PlantVillage 数据")]
 sx0 = Inches(0.9)
 sw_box = Inches(3.7)
 sg = Inches(0.22)
@@ -414,7 +414,7 @@ txt(s, Inches(6.6), Inches(6.32), Inches(2.55), Inches(0.35),
 txt(s, Inches(9.55), Inches(6.32), Inches(2.55), Inches(0.35),
     [{"runs": [("健康叶样张", {"size": 11, "c": MUTED})]}], align=PP_ALIGN.CENTER)
 txt(s, Inches(0.9), Inches(6.78), Inches(11.55), Inches(0.4),
-    [{"runs": [("YOLO11n-cls · 30 epoch 收敛 · Top-1 96.6%→99.8% · 验证损失持续下降 · 38 类中英文完整映射 · train/val 8:2",
+    [{"runs": [("YOLO11n-cls · 30 epoch 收敛 · Top-1 96.6%→99.7% · 验证损失持续下降 · 38 类中英文完整映射 · train/val 8:2",
                 {"size": 12, "c": INK})]}])
 footer(s, 8)
 
@@ -566,7 +566,7 @@ footer(s, 14)
 s = new_slide()
 title_bar(s, "05", "成果概览", "已完成的系统能力与验证结果")
 res = [
-    ("识别引擎", "38 类病害识别，Top-1 99.8%"),
+    ("识别引擎", "38 类识别（14 种作物），Top-1 99.7%"),
     ("定位可视化", "Grad-CAM 病灶热力图"),
     ("处方生成", "大模型个性化防治处方"),
     ("端到端验证", "/predict 闭环联调通过"),
